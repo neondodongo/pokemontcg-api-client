@@ -21,7 +21,7 @@ func GetAllSets() {
 	resp, err := http.Get(apiURI + "/sets")
 
 	// If an error was returned from the Get request, print an error statement and leave the function at this point
-	if err != nil {
+	if err != nil || resp.StatusCode != 200 {
 		fmt.Printf("Could not retrieve sets from API. Response from server: %d\n", resp.StatusCode)
 		return
 	}
