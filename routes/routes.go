@@ -63,9 +63,5 @@ func GetAllSets() {
 	fmt.Println("------------------------")
 
 	//sets.PrintSetNames()
-
 	sets.PrintStandardSets()
-
-	fmt.Printf("**********PROGRAM END**********")
-
 }

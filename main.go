@@ -12,4 +12,6 @@ func main() {
 	// Get all set data from Pokemon TCG API
 	routes.GetAllSets()
 
+	fmt.Printf("**********PROGRAM END**********")
+
 }
