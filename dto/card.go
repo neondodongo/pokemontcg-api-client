@@ -1,7 +1,7 @@
 package dto
 
 type Cards struct {
-	Cards []Card `json:"cards"`
+	Cards []Card `json:"card"`
 }
 
 type Card struct {
