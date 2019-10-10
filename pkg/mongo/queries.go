@@ -6,30 +6,30 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"log"
-	"net/http"
-	"pokemontcg-api-client/dto"
-	"pokemontcg-api-client/pkg/card"
 	"pokemontcg-api-client/pkg/config"
+	"pokemontcg-api-client/pkg/dto"
 )
 
 type DataAccess interface {
 	GetCollection() mongo.Collection
 	Upsert(interface{}, string)
-	//Delete()
+	GetCardById(id string) dto.Card
 }
 
 type MongoBongo struct {
-	Mgo     *mongo.Client
-	Config config.Config
+	Client          *mongo.Client
+	Database        string
+	CardsCollection string
+	SetsCollection  string
+	UsersCollection string
 }
 
 func (db *MongoBongo) Upsert(t interface{}, c string) error {
 	var filter bson.M
 
 	//determine interface type
-	switch t.(type){
+	switch t.(type) {
 	case dto.Card:
 		filter = bson.M{"id": t.(dto.Card).ID}
 	case dto.Set:
@@ -54,73 +54,55 @@ func (db *MongoBongo) Upsert(t interface{}, c string) error {
 
 }
 
-func (db *MongoBongo) GetCollection(c string) *mongo.Collection{
-
-	switch c{
-	case "cards":
-		return db.Mgo.Database(db.Config.Mongo.Database).Collection(db.Config.Mongo.CardsCollection)
-	case "sets":
-		return db.Mgo.Database(db.Config.Mongo.Database).Collection(db.Config.Mongo.SetsCollection)
-	case "users":
-		return db.Mgo.Database(db.Config.Mongo.Database).Collection(db.Config.Mongo.UsersCollection)
+func (db *MongoBongo) GetCollection(c string) *mongo.Collection {
+	switch c {
+	case db.CardsCollection:
+		log.Printf("cards collection name is being set [ %v ]", c)
+		return db.Client.Database(db.Database).Collection(db.CardsCollection)
+	case db.SetsCollection:
+		log.Printf("sets collection name is being set [ %v ]", c)
+		return db.Client.Database(db.Database).Collection(db.SetsCollection)
+	case db.UsersCollection:
+		log.Printf("users collection name is being set [ %v ]", c)
+		return db.Client.Database(db.Database).Collection(db.UsersCollection)
 	default:
-		return db.Mgo.Database(db.Config.Mongo.Database).Collection(db.Config.Mongo.CardsCollection)
+		log.Printf("default collection name is being set [ %v ]", c)
+		return db.Client.Database(db.Database).Collection(db.CardsCollection)
 	}
-
-
 }
 
-func InitDatabase(c config.Config) *MongoBongo {
+func InitDatabase(c config.Config) MongoBongo {
 
 	client, err := mongo.NewClient(options.Client().ApplyURI(c.Mongo.Url))
 	if err != nil {
-		fmt.Println(err)
+		log.Fatalf("error init mongo client [%v]", err)
 	}
 
 	ctx := context.Background()
 	err = client.Connect(ctx)
 	if err != nil {
-		fmt.Println("My name is carol and i am bith")
-	}
-	ping := client.Ping(ctx, readpref.Primary())
-	if ping != nil {
-		fmt.Println("Couldn't ping DB ", ping)
+		log.Fatalf("My name is carol, bith [%v]", err)
 	}
 
 	db := &MongoBongo{
-		Mgo:   client,
-		Config: c,
+		Client:          client,
+		Database:        c.Mongo.Database,
+		CardsCollection: c.Mongo.CardsCollection,
+		SetsCollection:  c.Mongo.SetsCollection,
+		UsersCollection: c.Mongo.UsersCollection,
 	}
 
-	return db
+	return *db
 }
 
-func(db *MongoBongo) PopulateDatabase() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		defer r.Body.Close()
+func (db *MongoBongo) GetCardById(id string) dto.Card {
 
-		sets, err := card.GetAllSets()
-		if err != nil {
-			log.Fatal(err)
-		}
+	var card dto.Card
 
-		for _, s := range sets.Sets {
-			err := db.Upsert(s, "sets")
-			if err != nil {
-				log.Printf("Failed to insert set [ %v ] with error [ %v ]", s.Code, err)
-			}
-			cards := card.GetCardsBySetCode(db.Config, s.Code)
+	c := db.Client.Database(db.Database).Collection(db.CardsCollection)
 
-			if len(cards.Cards) != s.TotalCards {
-				log.Printf("[WARNING] Did not receive all card in set: %s - Actual: %d, Expected: %d\n", s.Name, len(cards.Cards), s.TotalCards)
-			}
+	resp := c.FindOne(context.Background(), bson.M{"id": id}).Decode(&card)
 
-			for _, c := range cards.Cards {
-				err := db.Upsert(c, "card")
-				if err != nil {
-					log.Printf("Failed to insert card [ %v ] with error [ %v ]", c.ID, err)
-				}
-			}
-		}
-	})
+	log.Printf("response from mongo [ %v ]", resp)
+	return card
 }

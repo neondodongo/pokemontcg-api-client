@@ -9,7 +9,7 @@ type Config struct {
 	Port    string `json:"port"`
 	Timeout int    `json:"timeout"`
 	Mongo   struct {
-		Url string `json:"url"`
+		Url             string `json:"url"`
 		Database        string `json:"database"`
 		CardsCollection string `json:"cardsCollection"`
 		SetsCollection  string `json:"setsCollection"`
@@ -27,5 +27,6 @@ func GetConfig(path string) (c Config, err error) {
 	if err != nil {
 		return Config{}, err
 	}
+
 	return c, nil
 }

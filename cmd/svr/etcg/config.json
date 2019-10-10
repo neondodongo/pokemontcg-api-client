@@ -8,5 +8,5 @@
     "setsCollection": "sets",
     "usersCollection": "users"
   },
-  "pokemonTCG": "https://api.pokemontcg.io/v1"
+  "pokemonAPI": "https://api.pokemontcg.io/v1"
 }
