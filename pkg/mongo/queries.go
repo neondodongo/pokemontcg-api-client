@@ -3,12 +3,14 @@ package mongo
 import (
 	"context"
 	"fmt"
+	"log"
+	"net/url"
+	"pokemontcg-api-client/pkg/config"
+	"pokemontcg-api-client/pkg/dto"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"log"
-	"pokemontcg-api-client/pkg/config"
-	"pokemontcg-api-client/pkg/dto"
 )
 
 type DataAccess interface {
@@ -105,4 +107,39 @@ func (db *MongoBongo) GetCardById(id string) dto.Card {
 
 	log.Printf("response from mongo [ %v ]", resp)
 	return card
+}
+
+func (db *MongoBongo) GetFilterCards(params url.Values) []dto.Card {
+
+	var filters []bson.M
+	var filter bson.M
+	for k, v := range params {
+		filters = append(filters, bson.M{k: v[0]})
+
+	}
+	fmt.Println(filters)
+
+	filter = bson.M{"$and": filters}
+	options := options.Find().SetLimit(10)
+	c := db.Client.Database(db.Database).Collection(db.CardsCollection)
+
+	cursor, err := c.Find(context.Background(), filter, options)
+	if err != nil {
+		log.Printf("Could not find any results with the following parameters : %s\n", params)
+	}
+
+	cards := []dto.Card{}
+
+	for cursor.Next(context.Background()) {
+		card := dto.Card{}
+		if err := cursor.Decode(&card); err != nil {
+			log.Printf("Unable to decode card [%v]", err)
+		}
+		cards = append(cards, card)
+	}
+
+	log.Printf("Total cards from Filtered Search: %d", len(cards))
+
+	return cards
+
 }

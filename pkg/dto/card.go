@@ -5,13 +5,13 @@ type Cards struct {
 }
 
 type Card struct {
-	ID                    string   `json:"id,omitempty"`
-	Name                  string   `json:"name,omitempty"`
-	NationalPokedexNumber int      `json:"nationalPokedexNumber,omitempty"`
-	ImageURL              string   `json:"imageUrl,omitempty"`
-	ImageURLHiRes         string   `json:"imageUrlHiRes,omitempty"`
-	Types                 []string `json:"types,omitempty"`
-	Supertype             string   `json:"supertype,omitempty"`
+	ID                    string   `json:"id,omitempty" bson:"id,omitempty"`
+	Name                  string   `json:"name,omitempty" bson:"name,omitempty`
+	NationalPokedexNumber int      `json:"nationalPokedexNumber,omitempty" bson:"nationalPokedexNumber,omitempty"`
+	ImageURL              string   `json:"imageUrl,omitempty", bson:"imageUrl,omitempty"`
+	ImageURLHiRes         string   `json:"imageUrlHiRes,omitempty", bson:"imageUrlHiRes,omitempty"`
+	Types                 []string `json:"types,omitempty" bson:"types,omitempty"`
+	Supertype             string   `json:"supertype,omitempty" bson:"supertype,omitempty"`
 	Subtype               string   `json:"subtype,omitempty"`
 	Ability               struct {
 		Name string `json:"name,omitempty"`

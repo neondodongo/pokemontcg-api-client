@@ -70,7 +70,7 @@ func GetPaginatedCards(p controller.Controller, cards *dto.Cards, setCode string
 
 	for {
 		//build query with setCode and replace <count>
-		query := p.Config.PokemonAPI + "/card?page=<count>&setCode=" + setCode
+		query := p.Config.PokemonAPI + "/cards?page=<count>&setCode=" + setCode
 		uri := strings.Replace(query, "<count>", strconv.Itoa(count), 1)
 
 		//call to pokemon tcg api

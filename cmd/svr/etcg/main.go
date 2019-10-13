@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 	"pokemontcg-api-client/pkg/card"
@@ -10,7 +9,10 @@ import (
 	"pokemontcg-api-client/pkg/controller"
 	"pokemontcg-api-client/pkg/mongo"
 	"pokemontcg-api-client/pkg/tcg"
+
+	"github.com/gorilla/mux"
 )
+
 func main() {
 	cfg, err := config.GetConfig("cmd/svr/etcg/config.json")
 	if err != nil {
@@ -36,7 +38,7 @@ func main() {
 	//Handler functions for endpoints
 	r.Handle("/health", client.Health()).Methods(http.MethodGet)
 	r.Handle("/populate-database", tcg.PopulateDatabase(con)).Methods(http.MethodGet)
-	r.Handle("/card/{cardId}", card.GetCard(con)).Methods(http.MethodGet)
+	r.Handle("/cards", card.GetCards(con)).Methods(http.MethodGet)
 
 	//run server on port
 	log.Fatal(http.ListenAndServe(":3000", http.Handler(r)))
