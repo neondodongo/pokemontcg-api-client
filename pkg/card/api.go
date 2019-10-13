@@ -3,6 +3,7 @@ package card
 import (
 	"github.com/gorilla/mux"
 	"net/http"
+	"pokemontcg-api-client/pkg/client"
 	"pokemontcg-api-client/pkg/controller"
 )
 
@@ -18,6 +19,6 @@ func GetCard(c controller.Controller) http.Handler {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 
-		c.Client.RespondWithPrettyJSON(w, 200, card)
+		client.RespondWithPrettyJSON(w, 200, card)
 	})
 }

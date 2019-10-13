@@ -7,5 +7,6 @@
     "cardsCollection": "cards",
     "setsCollection": "sets",
     "usersCollection": "users"
-  }
+  },
+  "pokemonAPI": "https://api.pokemontcg.io/v1"
 }

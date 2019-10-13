@@ -10,10 +10,6 @@ import (
 	"time"
 )
 
-type HealthResponse struct {
-	Status  int    `json:"status"`
-	Message string `json:"message"`
-}
 
 type WebClient struct {
 	Client *http.Client
@@ -32,12 +28,15 @@ func InitializeClient(c config.Config) (w WebClient) {
 	return
 }
 
-func (c *WebClient)RespondWithPrettyJSON(w http.ResponseWriter, statusCode int, payload interface{}) {
-	bSlice, err := json.MarshalIndent(payload, "", "  ")
-	if err != nil {
-		log.Println("failed to marshal payload")
+func RespondWithPrettyJSON(w http.ResponseWriter, statusCode int, payload interface{}) {
+	bSlice, e := json.MarshalIndent(payload, "", "  ")
+	if e != nil {
+		log.Println("failed to marshal payload: ", e)
 	}
-	w.Write(bSlice)
+	_, e = w.Write(bSlice)
+	if e != nil{
+		log.Println("error writing byte slice: ", e)
+	}
 }
 
 func (c *WebClient)Get(uri string){
