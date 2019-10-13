@@ -1,4 +1,4 @@
-package tcg
+package etcg
 
 import (
 	"encoding/json"
