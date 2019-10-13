@@ -44,4 +44,5 @@ type Card struct {
 		Value string `json:"value,omitempty"`
 	} `json:"weaknesses,omitempty"`
 	EvolvesFrom string `json:"evolvesFrom,omitempty"`
+	IsFound bool `json:"isFound"`
 }

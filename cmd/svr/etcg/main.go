@@ -40,6 +40,7 @@ func main() {
 	////Handler functions for endpoints
 	//r.Handle("/health", client.Health()).Methods(http.MethodGet)
 	r.HandleFunc("/test-page", testPage)
+	r.HandleFunc("/view", con.ViewCard)
 	r.HandleFunc("/test-load-health", testLoadHealth)
 	r.HandleFunc("/sayhelloname", sayhelloName)
 	r.Handle("/populate-database", tcg.PopulateDatabase(con)).Methods(http.MethodGet)
@@ -91,6 +92,8 @@ func testLoadHealth(w http.ResponseWriter, r *http.Request){
 	}
 
 }
+
+
 
 func sayhelloName(w http.ResponseWriter, r *http.Request) {
 	p, _ := r.URL.User.Password()

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {{if not .}}
+        <title>Not Found</title>
+    {{else}}
+        <title>{{.Name}}</title>
+    {{end}}
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</head>
+<body>
+    {{if not .}}
+        <div class="jumbotron text-center">
+            <h1>{{.Name}}</h1>
+            <p>{{.Series}} - {{.Set}} - {{.SetCode}}</p>
+        </div>
+    {{else}}
+        <div class="jumbotron text-center">
+            <h1>{{.Name}}</h1>
+            <p>{{.Series}} - {{.Set}} - {{.SetCode}}</p>
+        </div>
+
+        <div class="container">
+            <div style="text-align: center" class="row">
+                <div class="col-sm-2"></div>
+                <div class="col-sm-8">
+                    <img src="{{.ImageURLHiRes}}" alt="{{.Name}}"/>
+                </div>
+                <div class="col-sm-2"></div>
+            </div>
+        </div>
+    {{end}}
+
+</body>
+</html>

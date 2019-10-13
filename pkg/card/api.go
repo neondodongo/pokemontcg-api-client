@@ -22,3 +22,4 @@ func GetCard(c controller.Controller) http.Handler {
 		client.RespondWithPrettyJSON(w, 200, card)
 	})
 }
+
