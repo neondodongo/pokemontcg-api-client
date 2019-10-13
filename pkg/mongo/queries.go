@@ -96,17 +96,18 @@ func InitDatabase(c config.Config) MongoBongo {
 
 	return *db
 }
-
-func (db *MongoBongo) GetCardById(id string) dto.Card {
-
-	var card dto.Card
+func (db *MongoBongo) GetCardById(id string) (card *dto.Card) {
 
 	c := db.Client.Database(db.Database).Collection(db.CardsCollection)
 
-	resp := c.FindOne(context.Background(), bson.M{"id": id}).Decode(&card)
+	log.Println("database  : ", db.Database)
+	log.Println("collection: ", db.CardsCollection)
+	log.Println("id        : ", id)
+
+	resp := c.FindOne(context.Background(), bson.M{"id": id}).Decode(card)
 
 	log.Printf("response from mongo [ %v ]", resp)
-	return card
+	return
 }
 
 func (db *MongoBongo) GetFilterCards(params url.Values) []dto.Card {
