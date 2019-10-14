@@ -116,7 +116,7 @@ func PopulateDatabase(p controller.Controller) http.Handler {
 			if err != nil {
 				log.Printf("failed to insert set %v [%v]", s.Code, err)
 			}
-			cards := GetCardsBySetCode(p, s.Code)
+			cards := GetPaginatedCards(p, s.Code)
 			if len(cards.Cards) != s.TotalCards {
 				log.Printf("[WARNING] did not receive all card in set [ %s ] - actual [ %d ] / expected: [ %d ]", s.Name, len(cards.Cards), s.TotalCards)
 			}
@@ -130,3 +130,11 @@ func PopulateDatabase(p controller.Controller) http.Handler {
 		}
 	})
 }
+
+//func PopulateDatabase
+//make call to get all sets
+//range over sets
+//upsert set information
+//get cards paginated list of cards
+//range over cards
+//upsert each card individually

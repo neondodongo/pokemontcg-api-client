@@ -6,10 +6,10 @@ type Cards struct {
 
 type Card struct {
 	ID                    string   `json:"id,omitempty" bson:"id,omitempty"`
-	Name                  string   `json:"name,omitempty" bson:"name,omitempty`
+	Name                  string   `json:"name,omitempty" bson:"name,omitempty"`
 	NationalPokedexNumber int      `json:"nationalPokedexNumber,omitempty" bson:"nationalPokedexNumber,omitempty"`
-	ImageURL              string   `json:"imageUrl,omitempty", bson:"imageUrl,omitempty"`
-	ImageURLHiRes         string   `json:"imageUrlHiRes,omitempty", bson:"imageUrlHiRes,omitempty"`
+	ImageURL              string   `json:"imageUrl,omitempty" bson:"imageUrl,omitempty"`
+	ImageURLHiRes         string   `json:"imageUrlHiRes,omitempty" bson:"imageUrlHiRes,omitempty"`
 	Types                 []string `json:"types,omitempty" bson:"types,omitempty"`
 	Supertype             string   `json:"supertype,omitempty" bson:"supertype,omitempty"`
 	Subtype               string   `json:"subtype,omitempty"`
@@ -44,5 +44,4 @@ type Card struct {
 		Value string `json:"value,omitempty"`
 	} `json:"weaknesses,omitempty"`
 	EvolvesFrom string `json:"evolvesFrom,omitempty"`
-	IsFound bool `json:"isFound"`
 }
