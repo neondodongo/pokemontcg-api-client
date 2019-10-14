@@ -10,7 +10,6 @@ import (
 	"time"
 )
 
-
 type WebClient struct {
 	Client *http.Client
 }
@@ -34,12 +33,12 @@ func RespondWithPrettyJSON(w http.ResponseWriter, statusCode int, payload interf
 		log.Println("failed to marshal payload: ", e)
 	}
 	_, e = w.Write(bSlice)
-	if e != nil{
+	if e != nil {
 		log.Println("error writing byte slice: ", e)
 	}
 }
 
-func (c *WebClient)Get(uri string){
+func (c *WebClient) Get(uri string) {
 
 }
 

@@ -1,7 +1,7 @@
 package dto
 
 type Cards struct {
-	Cards []Card `json:"card"`
+	Cards []Card `json:"card" bson:"card"`
 }
 
 type Card struct {
@@ -12,33 +12,33 @@ type Card struct {
 	ImageURLHiRes         string   `json:"imageUrlHiRes,omitempty" bson:"imageUrlHiRes,omitempty"`
 	Types                 []string `json:"types,omitempty" bson:"types,omitempty"`
 	Supertype             string   `json:"supertype,omitempty" bson:"supertype,omitempty"`
-	Subtype               string   `json:"subtype,omitempty"`
+	Subtype               string   `json:"subtype,omitempty" bson:"subtype,omitempty"`
 	Ability               struct {
-		Name string `json:"name,omitempty"`
-		Text string `json:"text,omitempty"`
-		Type string `json:"type,omitempty"`
-	} `json:"ability,omitempty"`
+		Name string `json:"name,omitempty" bson:"name,omitempty"`
+		Text string `json:"text,omitempty" bson:"text,omitempty"`
+		Type string `json:"type,omitempty" bson:"type,omitempty"`
+	} `json:"ability,omitempty" bson:"ability,omitempty"`
 	AncientTrait struct {
-		Name string `json:"name,omitempty"`
-		Text string `json:"text,omitempty"`
-	} `json:"ancientTrait,omitempty"`
-	Hp                   interface{} `json:"hp,omitempty"`
-	RetreatCost          []string    `json:"retreatCost,omitempty"`
-	ConvertedRetreatCost int         `json:"convertedRetreatCost,omitempty"`
-	Number               string      `json:"number,omitempty"`
-	Artist               string      `json:"artist,omitempty"`
-	Rarity               string      `json:"rarity,omitempty"`
-	Series               string      `json:"series,omitempty"`
-	Set                  string      `json:"set,omitempty"`
-	SetCode              string      `json:"setCode,omitempty"`
-	Text                 []string    `json:"text,omitempty"`
+		Name string `json:"name,omitempty" bson:"name,omitempty"`
+		Text string `json:"text,omitempty" bson:"text,omitempty"`
+	} `json:"ancientTrait,omitempty" bson:"ancientTrait,omitempty"`
+	Hp                   interface{} `json:"hp,omitempty" bson:"hp,omitempty"`
+	RetreatCost          []string    `json:"retreatCost,omitempty" bson:"retreatCost,omitempty"`
+	ConvertedRetreatCost int         `json:"convertedRetreatCost,omitempty" bson:"convertedRetreatCost,omitempty"`
+	Number               string      `json:"number,omitempty" bson:"number,omitempty"`
+	Artist               string      `json:"artist,omitempty" bson:"artist,omitempty"`
+	Rarity               string      `json:"rarity,omitempty" bson:"rarity,omitempty"`
+	Series               string      `json:"series,omitempty" bson:"series,omitempty"`
+	Set                  string      `json:"set,omitempty" bson:"set,omitempty"`
+	SetCode              string      `json:"setCode,omitempty" bson:"setCode,omitempty"`
+	Text                 []string    `json:"text,omitempty" bson:"text,omitempty"`
 	Attacks              []struct {
-		Cost                []string    `json:"cost,omitempty"`
-		Name                string      `json:"name,omitempty"`
-		Text                string      `json:"text,omitempty"`
-		Damage              interface{} `json:"damage,omitempty"`
-		ConvertedEnergyCost int         `json:"convertedEnergyCost,omitempty"`
-	} `json:"attacks,omitempty"`
+		Cost                []string    `json:"cost,omitempty" bson:"cost,omitempty"`
+		Name                string      `json:"name,omitempty" bson:"name,omitempty"`
+		Text                string      `json:"text,omitempty" bson:"text,omitempty"`
+		Damage              interface{} `json:"damage,omitempty" bson:"damage,omitempty"`
+		ConvertedEnergyCost int         `json:"convertedEnergyCost,omitempty" bson:"convertedEnergyCost,omitempty"`
+	} `json:"attacks,omitempty" bson:"attacks,omitempty"`
 	Weaknesses []struct {
 		Type  string `json:"type,omitempty"`
 		Value string `json:"value,omitempty"`

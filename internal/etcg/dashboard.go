@@ -48,3 +48,9 @@ func renderTemplate(title string, w http.ResponseWriter) error {
 
 	return nil
 }
+
+func (c *PokemonTCGController) BuildDatabase(w http.ResponseWriter, r *http.Request) {
+	json.NewEncoder(w).Encode("working...")
+	PopulateDatabase(c)
+	json.NewEncoder(w).Encode("Finished")
+}
