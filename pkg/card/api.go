@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"pokemontcg-api-client/pkg/client"
 	"pokemontcg-api-client/pkg/controller"
 	"pokemontcg-api-client/pkg/dto"
 )
@@ -26,7 +27,7 @@ func GetCards(c controller.Controller) http.Handler {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 
-		c.Client.RespondWithPrettyJSON(w, 200, cards)
+		client.RespondWithPrettyJSON(w, 200, cards)
 	})
 }
 

@@ -21,7 +21,10 @@ func (c *PokemonTCGController) GetDashboard(w http.ResponseWriter, r *http.Reque
 	title := path[strings.LastIndex(r.URL.Path, "/")+1:]
 	if err := renderTemplate(title, w); err != nil {
 		log.Printf("Failed to render template [%v]", err)
-		json.NewEncoder(w).Encode("404 PAGE NOT FOUND")
+		e := json.NewEncoder(w).Encode("404 PAGE NOT FOUND")
+		if e != nil{
+			log.Println("error encoding value: ", err)
+		}
 	}
 
 }

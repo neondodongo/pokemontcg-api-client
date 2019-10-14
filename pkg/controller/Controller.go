@@ -25,6 +25,12 @@ type Controller struct {
 
 func (c *Controller)ViewCard(w http.ResponseWriter, r *http.Request){
 
+	gon := r.URL.Query()
+	log.Println("gone: ", gon)
+
+	cards := c.Mongo.GetFilterCards(gon)
+	log.Println("cards: ", cards)
+
 	idQ := r.URL.Query().Get("id")
 	log.Println("id query: ", idQ)
 
@@ -47,11 +53,11 @@ func (c *Controller)ViewCard(w http.ResponseWriter, r *http.Request){
 
 	temp, e := template.ParseFiles("templates/" + p.Title + ".html")
 	if e != nil{
-		log.Printf("error parsing template: ", e)
+		log.Println("error parsing template: ", e)
 	}
 
 	e = temp.Execute(w, card)
 	if e != nil{
-		log.Printf("error executing template: ", e)
+		log.Println("error executing template: ", e)
 	}
 }

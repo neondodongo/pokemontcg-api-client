@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"pokemontcg-api-client/pkg/client"
 	"pokemontcg-api-client/pkg/config"
 	"pokemontcg-api-client/pkg/dto"
 	"pokemontcg-api-client/pkg/mongo"
@@ -79,17 +78,30 @@ func (c *PokemonTCGController) GetPaginatedCards(setCode string) (error, *dto.Ca
 			return err, nil
 		}
 
-		cards := []dto.Card{}
+		var cards dto.Cards
 
 		//decode response from call to dynamic tcg uri
-		err = client.DecodeInterface(resp.Body, cards)
-		if err != nil {
-			log.Fatalf("error decoding interface [%v]", err)
-			return err, nil
+		//err = client.DecodeInterface(resp.Body, cards)
+		//if err != nil {
+		//	log.Fatalf("error decoding interface [%v]", err)
+		//	return err, nil
+		//}
+
+		b, e := ioutil.ReadAll(resp.Body)
+		if e != nil{
+			return e, nil
 		}
 
+		//log.Println("cards byte slice: ", string(b))
+
+		e = json.Unmarshal(b, &cards)
+		if e != nil{
+			return e, nil
+		}
+		log.Println("cards: ", cards)
+
 		//append cards to temporary card array
-		actualCards = append(actualCards, cards...)
+		actualCards = append(actualCards, cards.Cards...)
 		links := resp.Header.Get("link")
 		if !strings.Contains(links, `rel="next"`) {
 			break
@@ -120,14 +132,22 @@ func PopulateDatabase(c *PokemonTCGController) {
 		}
 		cards := c.GetCardsBySetCode(s.Code)
 		if len(cards.Cards) != s.TotalCards {
-			//log.Printf("[WARNING] did not receive all card in set [ %s ] - actual [ %d ] / expected: [ %d ]", s.Name, len(cards.Cards), s.TotalCards)
+			log.Printf("[WARNING] did not receive all card in set [ %s ] - actual [ %d ] / expected: [ %d ]", s.Name, len(cards.Cards), s.TotalCards)
 		}
 
 		for _, card := range cards.Cards {
-			err := c.Mongo.Upsert(c, c.Config.Mongo.CardsCollection)
+			err := c.Mongo.Upsert(card, c.Config.Mongo.CardsCollection)
 			if err != nil {
 				log.Printf("failed to insert card %v [%v]", card.ID, err)
 			}
 		}
 	}
 }
+
+//func PopulateDatabase
+//make call to get all sets
+//range over sets
+//upsert set information
+//get cards paginated list of cards
+//range over cards
+//upsert each card individually

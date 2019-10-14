@@ -33,14 +33,11 @@ func main() {
 		Client: cli,
 	}
 	//
-	log.Println("log: Elite Trainer TCG [ running ]")
+	log.Println("ELITE TRAINER TCG")
 	log.Println("Server is running on port: ", cfg.Port)
 
 	////Mux Router handling
 	r := mux.NewRouter().StrictSlash(true)
-	//
-	////Handler functions for endpoints
-	//r.Handle("/health", client.Health()).Methods(http.MethodGet)
 	r.HandleFunc("/test-page", testPage)
 	r.HandleFunc("/view", con.ViewCard)
 	r.HandleFunc("/test-load-health", testLoadHealth)
@@ -50,20 +47,6 @@ func main() {
 	//run server on port
 	log.Fatal(http.ListenAndServe(":3000", http.Handler(r)))
 
-	//p1 := &Page{Title: "TestPage", Body: []byte("This is a sample Page.")}
-	//p1.save()
-	//p2, _ := loadPage("TestPage")
-	//fmt.Println(string(p2.Body))
-
-	//http.HandleFunc("/health", client.Health)
-	//log.Fatal(http.ListenAndServe(":8080", nil))
-	//fs := http.FileServer(http.Dir("static"))
-	//http.Handle("/static/", http.StripPrefix("/static/", fs))
-	//
-	//http.HandleFunc("/health", client.Health)
-	//
-	//log.Println("Listening...")
-	//http.ListenAndServe(":3000", nil)
 }
 func testPage(w http.ResponseWriter, r *http.Request) {
 	p := client.Page{
@@ -93,8 +76,6 @@ func testLoadHealth(w http.ResponseWriter, r *http.Request) {
 	}
 
 }
-
-
 
 func sayhelloName(w http.ResponseWriter, r *http.Request) {
 	p, _ := r.URL.User.Password()

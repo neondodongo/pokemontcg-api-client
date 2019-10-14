@@ -1,12 +1,12 @@
 package dto
 
 type Cards struct {
-	Cards []Card `json:"card" bson:"card"`
+	Cards []Card `json:"cards" bson:"cards"`
 }
 
 type Card struct {
 	ID                    string   `json:"id,omitempty" bson:"id,omitempty"`
-	Name                  string   `json:"name,omitempty" bson:"name,omitempty`
+	Name                  string   `json:"name,omitempty" bson:"name,omitempty"`
 	NationalPokedexNumber int      `json:"nationalPokedexNumber,omitempty" bson:"nationalPokedexNumber,omitempty"`
 	ImageURL              string   `json:"imageUrl,omitempty" bson:"imageUrl,omitempty"`
 	ImageURLHiRes         string   `json:"imageUrlHiRes,omitempty" bson:"imageUrlHiRes,omitempty"`
@@ -40,9 +40,8 @@ type Card struct {
 		ConvertedEnergyCost int         `json:"convertedEnergyCost,omitempty" bson:"convertedEnergyCost,omitempty"`
 	} `json:"attacks,omitempty" bson:"attacks,omitempty"`
 	Weaknesses []struct {
-		Type  string `json:"type,omitempty" bson:"type,omitempty"`
-		Value string `json:"value,omitempty" bson:"value,omitempty"`
-	} `json:"weaknesses,omitempty" bson:"weaknesses,omitempty"`
-	EvolvesFrom string `json:"evolvesFrom,omitempty" bson:"evolvesFrom,omitempty"`
-	IsFound     bool   `json:"isFound" bson:"isFound"`
+		Type  string `json:"type,omitempty"`
+		Value string `json:"value,omitempty"`
+	} `json:"weaknesses,omitempty"`
+	EvolvesFrom string `json:"evolvesFrom,omitempty"`
 }
