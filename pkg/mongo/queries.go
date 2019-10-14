@@ -37,7 +37,7 @@ func (db *MongoBongo) Upsert(t interface{}, c string) error {
 	case dto.Set:
 		filter = bson.M{"code": t.(dto.Set).Code}
 	case dto.User:
-		filter = bson.M{"code": t.(dto.User).Username}
+		filter = bson.M{"username": t.(dto.User).Username}
 	}
 
 	update := bson.M{"$set": t}
