@@ -8,7 +8,6 @@ import (
 	"text/template"
 
 	"pokemontcg-api-client/pkg/client"
-	"pokemontcg-api-client/pkg/mongo"
 )
 
 const (
@@ -47,6 +46,8 @@ func renderTemplate(title string, w http.ResponseWriter) error {
 	return nil
 }
 
-func (db *mongo.MongoBongo) buildDatabase(w http.ResponseWriter, r *http.Request) {
-
+func (c *PokemonTCGController) BuildDatabase(w http.ResponseWriter, r *http.Request) {
+	json.NewEncoder(w).Encode("working...")
+	PopulateDatabase(c)
+	json.NewEncoder(w).Encode("Finished")
 }

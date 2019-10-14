@@ -38,6 +38,7 @@ func main() {
 	////Handler functions for endpoints
 	//r.Handle("/health", client.Health()).Methods(http.MethodGet)
 	r.HandleFunc("/dashboard", con.GetDashboard).Methods(http.MethodGet)
+	r.HandleFunc("/dashboard/db/build", con.BuildDatabase).Methods(http.MethodGet)
 
 	log.Println("Server is running on port: ", cfg.Port)
 	log.Fatal(http.ListenAndServe(":"+cfg.Port, http.Handler(r)))
