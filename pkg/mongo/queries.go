@@ -104,7 +104,7 @@ func (db *MongoBongo) GetCardById(id string) (card *dto.Card) {
 	log.Println("collection: ", db.CardsCollection)
 	log.Println("id        : ", id)
 
-	resp := c.FindOne(context.Background(), bson.M{"id": id}).Decode(card)
+	resp := c.FindOne(context.Background(), bson.M{"id": id}).Decode(&card)
 
 	log.Printf("response from mongo [ %v ]", resp)
 	return
@@ -118,10 +118,10 @@ func (db *MongoBongo) GetFilterCards(params url.Values) []dto.Card {
 		filters = append(filters, bson.M{k: v[0]})
 
 	}
-	fmt.Println(filters)
+	fmt.Println("filters: ", filters)
 
 	filter = bson.M{"$and": filters}
-	options := options.Find().SetLimit(10)
+	options := options.Find().SetLimit(100)
 	c := db.Client.Database(db.Database).Collection(db.CardsCollection)
 
 	cursor, err := c.Find(context.Background(), filter, options)

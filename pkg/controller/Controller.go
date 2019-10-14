@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"pokemontcg-api-client/pkg/client"
 	"pokemontcg-api-client/pkg/config"
+	"pokemontcg-api-client/pkg/dto"
 	"pokemontcg-api-client/pkg/mongo"
 )
 
@@ -28,11 +29,10 @@ func (c *Controller)ViewCard(w http.ResponseWriter, r *http.Request){
 	gon := r.URL.Query()
 	log.Println("gone: ", gon)
 
-	cards := c.Mongo.GetFilterCards(gon)
-	log.Println("cards: ", cards)
+	var cards dto.Cards
 
-	idQ := r.URL.Query().Get("id")
-	log.Println("id query: ", idQ)
+	cards.Cards = c.Mongo.GetFilterCards(gon)
+	//log.Println("cards: ", cards)
 
 	p, e := client.LoadPage("view")
 	if e != nil{
@@ -42,7 +42,7 @@ func (c *Controller)ViewCard(w http.ResponseWriter, r *http.Request){
 		}
 	}
 
-	card := c.Mongo.GetCardById(idQ)
+	//card := c.Mongo.GetCardById(idQ)
 
 	//var card dto.Card
 	//card.Name = "Parasect"
@@ -56,7 +56,7 @@ func (c *Controller)ViewCard(w http.ResponseWriter, r *http.Request){
 		log.Println("error parsing template: ", e)
 	}
 
-	e = temp.Execute(w, card)
+	e = temp.Execute(w, cards)
 	if e != nil{
 		log.Println("error executing template: ", e)
 	}

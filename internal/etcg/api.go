@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"pokemontcg-api-client/pkg/client"
 	"pokemontcg-api-client/pkg/config"
 	"pokemontcg-api-client/pkg/dto"
 	"pokemontcg-api-client/pkg/mongo"
@@ -81,23 +82,21 @@ func (c *PokemonTCGController) GetPaginatedCards(setCode string) (error, *dto.Ca
 		var cards dto.Cards
 
 		//decode response from call to dynamic tcg uri
-		//err = client.DecodeInterface(resp.Body, cards)
-		//if err != nil {
-		//	log.Fatalf("error decoding interface [%v]", err)
-		//	return err, nil
+		err = client.DecodeInterface(resp.Body, &cards)
+		if err != nil {
+			log.Fatalf("error decoding interface [%v]", err)
+			return err, nil
+		}
+
+		//b, e := ioutil.ReadAll(resp.Body)
+		//if e != nil{
+		//	return e, nil
 		//}
-
-		b, e := ioutil.ReadAll(resp.Body)
-		if e != nil{
-			return e, nil
-		}
-
-		//log.Println("cards byte slice: ", string(b))
-
-		e = json.Unmarshal(b, &cards)
-		if e != nil{
-			return e, nil
-		}
+		//
+		//e = json.Unmarshal(b, &cards)
+		//if e != nil{
+		//	return e, nil
+		//}
 		log.Println("cards: ", cards)
 
 		//append cards to temporary card array

@@ -4,7 +4,7 @@
     {{if not .}}
         <title>Not Found</title>
     {{else}}
-        <title>{{.Name}}</title>
+        <title>Cards</title>
     {{end}}
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -14,27 +14,38 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
 </head>
 <body>
-    {{if not .}}
-        <div class="jumbotron text-center">
-            <h1>Not Found</h1>
-            <p>error! card is missing :(</p>
-        </div>
-    {{else}}
-        <div class="jumbotron text-center">
-            <h1>{{.Name}}</h1>
-            <p>{{.Series}} - {{.Set}} - {{.SetCode}}</p>
-        </div>
 
-        <div class="container">
-            <div style="text-align: center" class="row">
-                <div class="col-sm-2"></div>
-                <div class="col-sm-8">
-                    <img src="{{.ImageURLHiRes}}" alt="{{.Name}}"/>
-                </div>
-                <div class="col-sm-2"></div>
+{{/*https://godoc.org/github.com/astaxie/beego/utils/pagination*/}}
+    {{range .Cards}}
+        {{if not .}}
+            <div class="jumbotron text-center">
+                <h1>{{.Name}}</h1>
+                <p>{{.Series}} - {{.Set}} - {{.SetCode}}</p>
             </div>
-        </div>
+            <div class="container">
+                <div style="text-align: center" class="row">
+                    <div class="col-sm-2"></div>
+                    <div class="col-sm-8">
+                        <img style="max-height: 100%; max-width: 100%" src="" alt="Not Found"/>
+                    </div>
+                    <div class="col-sm-2"></div>
+                </div>
+            </div>
+        {{else}}
+            <div class="jumbotron text-center">
+                <h1>{{.Name}}</h1>
+                <p>{{.Series}} - {{.Set}} - {{.SetCode}}</p>
+            </div>
+            <div class="container">
+                <div style="text-align: center" class="row">
+                    <div class="col-sm-2"></div>
+                    <div class="col-sm-8">
+                        <img style="max-height: 100%; max-width: 100%" src="{{.ImageURLHiRes}}" alt="{{.Name}}"/>
+                    </div>
+                    <div class="col-sm-2"></div>
+                </div>
+            </div>
+        {{end}}
     {{end}}
-
 </body>
 </html>
