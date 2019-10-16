@@ -32,7 +32,7 @@ func (c *Controller)ViewCard(w http.ResponseWriter, r *http.Request){
 	var cards dto.Cards
 
 	cards.Cards = c.Mongo.GetFilterCards(gon)
-	//log.Println("cards: ", cards)
+	log.Println("cards: ", cards)
 
 	p, e := client.LoadPage("view")
 	if e != nil{
@@ -41,15 +41,6 @@ func (c *Controller)ViewCard(w http.ResponseWriter, r *http.Request){
 			fmt.Println("error serving: ", e)
 		}
 	}
-
-	//card := c.Mongo.GetCardById(idQ)
-
-	//var card dto.Card
-	//card.Name = "Parasect"
-	//card.Series = "Sun & Moon"
-	//card.Set = "Team Up"
-	//card.SetCode = "sm9"
-	//card.ImageURLHiRes = "https://images.pokemontcg.io/sm9/7_hires.png"
 
 	temp, e := template.ParseFiles("templates/" + p.Title + ".html")
 	if e != nil{
