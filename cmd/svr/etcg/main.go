@@ -38,6 +38,8 @@ func main() {
 
 	////Mux Router handling
 	r := mux.NewRouter().StrictSlash(true)
+	r.HandleFunc("/", Home)
+	r.HandleFunc("/receive", receiveAjax)
 	r.HandleFunc("/test-page", testPage)
 	r.HandleFunc("/view", con.ViewCard)
 	r.HandleFunc("/test-load-health", testLoadHealth)
@@ -108,5 +110,56 @@ func sayhelloName(w http.ResponseWriter, r *http.Request) {
 	if e != nil {
 		fmt.Println("error sending data to client: ", e)
 		return
+	}
+}
+
+
+func Home(w http.ResponseWriter, r *http.Request) {
+	log.Printf("request: %v", r)
+	html := `<head>	
+<script src='//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js'></script>
+              </head>    
+                  <html><body>
+                  <h1>Golang Jquery AJAX example</h1>
+
+                  <div id='result'><h3>before</h3></div><br><br>
+
+                  <input id='ajax_btn' type='button' value='POST via AJAX to Golang server'>
+                  </body></html>
+
+                   <script>
+                   $(document).ready(function () { 
+                         $('#ajax_btn').click(function () {
+                             $.ajax({
+                               url: 'receive',
+                               type: 'post',
+                               dataType: 'html',
+                               data : { ajax_post_data: 'hello'},
+                               success : function(data) {
+                                 alert('ajax data posted');
+                                 $('#result').html(data);
+                               },
+                             });
+                          });
+                    });
+                    </script>`
+
+	n, e := w.Write([]byte(fmt.Sprintf(html)))
+	if e != nil{
+		client.RespondWithPrettyJSON(w, n, e)
+		return
+	}
+
+}
+
+func receiveAjax(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "POST" {
+		ajaxPostData := r.FormValue("ajax_post_data")
+		fmt.Println("Receive ajax post data string ", ajaxPostData)
+		n, e := w.Write([]byte("<h2>after<h2>"))
+		if e != nil{
+			client.RespondWithPrettyJSON(w, n, e)
+			return
+		}
 	}
 }

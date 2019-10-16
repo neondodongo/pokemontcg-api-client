@@ -126,7 +126,13 @@ func (db *MongoBongo) GetFilterCards(params url.Values) []dto.Card {
 
 	cursor, err := c.Find(context.Background(), filter, options)
 	if err != nil {
-		log.Printf("Could not find any results with the following parameters : %s\n", params)
+		filter = bson.M{"set":"Shiny Vault"}
+		log.Printf("error finding documents: %v... attempt Shiny Vault", err)
+		c, e := c.Find(context.Background(), filter, options)
+		if e != nil{
+			log.Printf("error finding Shiny Vault: %v", e)
+		}
+		cursor = c
 	}
 
 	cards := []dto.Card{}
