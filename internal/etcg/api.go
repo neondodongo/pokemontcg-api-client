@@ -12,6 +12,8 @@ import (
 	"pokemontcg-api-client/pkg/mongo"
 	"strconv"
 	"strings"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type PokemonTCGController struct {
@@ -97,7 +99,7 @@ func (c *PokemonTCGController) GetPaginatedCards(setCode string) (error, *dto.Ca
 		//if e != nil{
 		//	return e, nil
 		//}
-		log.Println("cards: ", cards)
+		// log.Println("cards: ", cards)
 
 		//append cards to temporary card array
 		actualCards = append(actualCards, cards.Cards...)
@@ -124,23 +126,80 @@ func PopulateDatabase(c *PokemonTCGController) {
 		log.Printf("unable to get sets [%v]", err)
 	}
 
-	for _, s := range sets.Sets {
-		err := c.Mongo.Upsert(s, c.Config.Mongo.SetsCollection)
+	for _, set := range sets.Sets {
+		err := c.Mongo.Upsert(set)
 		if err != nil {
-			log.Printf("failed to insert set %v [%v]", s.Code, err)
+			log.Printf("failed to insert set %v [%v]", set.Code, err)
 		}
-		cards := c.GetCardsBySetCode(s.Code)
-		if len(cards.Cards) != s.TotalCards {
-			log.Printf("[WARNING] did not receive all card in set [ %s ] - actual [ %d ] / expected: [ %d ]", s.Name, len(cards.Cards), s.TotalCards)
+		cards := c.GetCardsBySetCode(set.Code)
+		if len(cards.Cards) != set.TotalCards {
+			log.Printf("[WARNING] did not receive all card in set [ %s ] - actual [ %d ] / expected: [ %d ]", set.Name, len(cards.Cards), set.TotalCards)
 		}
 
 		for _, card := range cards.Cards {
-			err := c.Mongo.Upsert(card, c.Config.Mongo.CardsCollection)
+			err := c.Mongo.Upsert(card)
 			if err != nil {
 				log.Printf("failed to insert card %v [%v]", card.ID, err)
 			}
 		}
 	}
+}
+
+func (c *PokemonTCGController) CreateUser(un, em, pw, pwv string) error {
+
+	if pw != pwv {
+		fmt.Println("Password and Password Verify do not match")
+		return nil
+	}
+
+	// Check if user exists
+	_, err := c.Mongo.FindUserByEmail(em)
+	if err != nil {
+		fmt.Printf("Did not find User data [%v]\n", err)
+	} else {
+		log.Printf("User already registered with email %s", em)
+		return nil
+	}
+
+	// Check if username has been taken
+	_, err = c.Mongo.FindUserByUsername(un)
+	if err != nil {
+		fmt.Printf("Failed to find User data [%v]\n", err)
+	} else {
+		log.Printf("Username already taken: %s", un)
+		return nil
+	}
+
+	// Hash user's password and save to DB
+	hash, err := HashPassword(pw)
+	if err != nil {
+		fmt.Printf("Failed to hash password [%v]\n", err)
+		return err
+	}
+
+	u := dto.InitUser(un, hash, em)
+
+	r := dto.Role{
+		Name:        "AUTH_USER",
+		Description: "Basic, authenticated user access to ETCG",
+	}
+
+	u.Roles = u.AddRole(r)
+
+	// Save user
+	err = c.Mongo.Upsert(u)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func HashPassword(pw string) (string, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(pw), bcrypt.MinCost)
+	if err != nil {
+		return "", err
+	}
+	return string(hash), nil
 }
 
 //func PopulateDatabase

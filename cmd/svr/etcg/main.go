@@ -1,19 +1,21 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
-	"pokemontcg-api-client/pkg/card"
+	"pokemontcg-api-client/internal/etcg"
 	"pokemontcg-api-client/pkg/client"
 	"pokemontcg-api-client/pkg/config"
-	"pokemontcg-api-client/pkg/controller"
 	"pokemontcg-api-client/pkg/mongo"
 
 	"strings"
 
 	"github.com/gorilla/mux"
 )
+
+var con *etcg.PokemonTCGController
 
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
@@ -27,10 +29,10 @@ func main() {
 	cli := client.InitializeClient(cfg)
 
 	//InitiateControllers
-	con := controller.Controller{
+	con = &etcg.PokemonTCGController{
 		Config: cfg,
-		Mongo:  db,
-		Client: cli,
+		Mongo:  &db,
+		Client: cli.Client,
 	}
 	//
 	log.Println("ELITE TRAINER TCG")
@@ -39,17 +41,46 @@ func main() {
 	////Mux Router handling
 	r := mux.NewRouter().StrictSlash(true)
 	r.HandleFunc("/", Home)
+	r.HandleFunc("/signup", signUp).Methods(http.MethodGet, http.MethodPost)
 	r.HandleFunc("/receive", receiveAjax)
 	r.HandleFunc("/test-page", testPage)
-	r.HandleFunc("/view", con.ViewCard)
+	//r.HandleFunc("/view", con.ViewCard)
 	r.HandleFunc("/test-load-health", testLoadHealth)
 	r.HandleFunc("/sayhelloname", sayhelloName)
-	r.Handle("/card/{cardId}", card.GetCards(con)).Methods(http.MethodGet)
+	//r.Handle("/card/{cardId}", card.GetCards(con)).Methods(http.MethodGet)
 
 	//run server on port
 	log.Fatal(http.ListenAndServe(":3000", http.Handler(r)))
 
 }
+
+func signUp(w http.ResponseWriter, r *http.Request) {
+
+	if r.Method == http.MethodGet {
+		path := r.URL.Path
+		title := path[strings.LastIndex(r.URL.Path, "/")+1:]
+		if err := con.RenderTemplate(title, w); err != nil {
+			log.Printf("Failed to render template [%v]", err)
+			e := json.NewEncoder(w).Encode("404 PAGE NOT FOUND")
+			if e != nil {
+				log.Println("error encoding value: ", err)
+			}
+		}
+		return
+	}
+
+	r.ParseForm()
+	un := strings.TrimSpace(r.FormValue("username"))
+	em := strings.TrimSpace(r.FormValue("email"))
+	pw := strings.TrimSpace(r.FormValue("password"))
+	pwv := strings.TrimSpace(r.FormValue("verify"))
+
+	if err := con.CreateUser(un, em, pw, pwv); err != nil {
+		fmt.Printf("Failed to create user [%v]\n", err)
+	}
+
+}
+
 func testPage(w http.ResponseWriter, r *http.Request) {
 	p := client.Page{
 		Title: "test-page",
@@ -113,7 +144,6 @@ func sayhelloName(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-
 func Home(w http.ResponseWriter, r *http.Request) {
 	log.Printf("request: %v", r)
 	html := `<head>	
@@ -145,7 +175,7 @@ func Home(w http.ResponseWriter, r *http.Request) {
                     </script>`
 
 	n, e := w.Write([]byte(fmt.Sprintf(html)))
-	if e != nil{
+	if e != nil {
 		client.RespondWithPrettyJSON(w, n, e)
 		return
 	}
@@ -157,7 +187,7 @@ func receiveAjax(w http.ResponseWriter, r *http.Request) {
 		ajaxPostData := r.FormValue("ajax_post_data")
 		fmt.Println("Receive ajax post data string ", ajaxPostData)
 		n, e := w.Write([]byte("<h2>after<h2>"))
-		if e != nil{
+		if e != nil {
 			client.RespondWithPrettyJSON(w, n, e)
 			return
 		}

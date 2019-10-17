@@ -27,29 +27,32 @@ type MongoBongo struct {
 	UsersCollection string
 }
 
-func (db *MongoBongo) Upsert(t interface{}, c string) error {
+func (db *MongoBongo) Upsert(t interface{}) error {
 	var filter bson.M
-
+	var c string
 	//determine interface type
 	switch t.(type) {
 	case dto.Card:
 		filter = bson.M{"id": t.(dto.Card).ID}
+		c = db.CardsCollection
 	case dto.Set:
 		filter = bson.M{"code": t.(dto.Set).Code}
+		c = db.SetsCollection
 	case dto.User:
 		filter = bson.M{"username": t.(dto.User).Username}
+		c = db.UsersCollection
 	}
 
 	update := bson.M{"$set": t}
-	userChosenCollection := db.GetCollection(c)
-	r, err := userChosenCollection.UpdateOne(context.Background(), filter, update, options.Update().SetUpsert(true))
+	collection := db.GetCollection(c)
+	r, err := collection.UpdateOne(context.Background(), filter, update, options.Update().SetUpsert(true))
 	if err != nil {
-		return fmt.Errorf("Failed to insert one to %s collection [ %v ]", userChosenCollection.Name(), err)
+		return fmt.Errorf("Failed to insert one to %s collection [ %v ]", collection.Name(), err)
 	}
 	if r.MatchedCount == 0 {
-		log.Printf("inserted one [ %v ] to collection [ %v ]", t, userChosenCollection.Name())
+		log.Printf("inserted one [ %v ] to collection [ %v ]", t, collection.Name())
 	} else if r.ModifiedCount == 1 {
-		log.Printf("updated one [ %v ] to collection [ %v ]", t, userChosenCollection.Name())
+		log.Printf("updated one [ %v ] to collection [ %v ]", t, collection.Name())
 	}
 
 	return nil
@@ -126,10 +129,10 @@ func (db *MongoBongo) GetFilterCards(params url.Values) []dto.Card {
 
 	cursor, err := c.Find(context.Background(), filter, options)
 	if err != nil {
-		filter = bson.M{"set":"Shiny Vault"}
+		filter = bson.M{"set": "Shiny Vault"}
 		log.Printf("error finding documents: %v... attempt Shiny Vault", err)
 		c, e := c.Find(context.Background(), filter, options)
-		if e != nil{
+		if e != nil {
 			log.Printf("error finding Shiny Vault: %v", e)
 		}
 		cursor = c
@@ -149,4 +152,24 @@ func (db *MongoBongo) GetFilterCards(params url.Values) []dto.Card {
 
 	return cards
 
+}
+
+func (db *MongoBongo) FindUserByUsername(un string) (u dto.User, err error) {
+	filter := bson.M{"username": un}
+	col := db.GetCollection(db.UsersCollection)
+	r := col.FindOne(context.Background(), filter)
+	if err = r.Decode(&u); err != nil {
+		return
+	}
+	return
+}
+
+func (db *MongoBongo) FindUserByEmail(em string) (u dto.User, err error) {
+	filter := bson.M{"email": em}
+	col := db.GetCollection(db.UsersCollection)
+	r := col.FindOne(context.Background(), filter)
+	if err = r.Decode(&u); err != nil {
+		return
+	}
+	return
 }
