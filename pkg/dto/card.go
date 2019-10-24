@@ -1,5 +1,13 @@
 package dto
 
+type PaginatedCards struct{
+	Pages []Page
+}
+
+type Page struct{
+	Cards []Card
+}
+
 type Cards struct {
 	Cards []Card `json:"cards" bson:"cards"`
 }

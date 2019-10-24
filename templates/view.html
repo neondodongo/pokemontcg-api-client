@@ -1,6 +1,119 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <style>
+        @import url(https://fonts.googleapis.com/css?family=Open+Sans:400,600,700);
+
+        /* General Buttons */
+        button {
+            width: 130px;
+            height: 40px;
+            background: linear-gradient(to bottom, #4eb5e5 0%,#389ed5 100%); /* W3C */
+            border: none;
+            border-radius: 5px;
+            position: relative;
+            border-bottom: 4px solid #2b8bc6;
+            color: #fbfbfb;
+            font-weight: 600;
+            font-family: 'Open Sans', sans-serif;
+            text-shadow: 1px 1px 1px rgba(0,0,0,.4);
+            font-size: 15px;
+            text-align: left;
+            text-indent: 5px;
+            box-shadow: 0px 3px 0px 0px rgba(0,0,0,.2);
+            cursor: pointer;
+
+            /* Just for presentation */
+            display: block;
+            margin: 0 auto;
+            margin-bottom: 20px;
+        }
+        button:active {
+            box-shadow: 0px 2px 0px 0px rgba(0,0,0,.2);
+            top: 1px;
+        }
+
+        .previous-button {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 100%;
+            text-align: right;
+            font-size: 18px;
+        }
+        .next-button {
+            background: none;
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 100%;
+            text-align: left;
+            font-size: 18px;
+        }
+
+        button:after {
+            content: "";
+            width: 0;
+            height: 0;
+            display: block;
+            border-top: 20px solid #187dbc;
+            border-bottom: 20px solid #187dbc;
+            border-left: 16px solid transparent;
+            border-right: 20px solid #187dbc;
+            position: absolute;
+            opacity: 0.6;
+            right: 0;
+            top: 0;
+            border-radius: 0 5px 5px 0;
+        }
+
+        /* Button pointing left */
+
+        button.back {
+            text-align: right;
+            padding-right: 12px;
+            box-sizing: border-box;
+        }
+        button.back:after {
+            content: "";
+            width: 0;
+            height: 0;
+            display: block;
+            border-top: 20px solid #187dbc;
+            border-bottom: 20px solid #187dbc;
+            border-right: 16px solid transparent;
+            border-left: 20px solid #187dbc;
+            position: absolute;
+            opacity: 0.6;
+            left: 0;
+            top: 0;
+            border-radius: 5px 0 0 5px;
+        }
+
+        /* Single buttons */
+
+        button.site {
+            width: 40px;
+            text-align: center;
+            text-indent: 0;
+        }
+        button.site:after{
+            display: none;
+        }
+
+        /*.carousel-control-next-icon:after*/
+        /*{*/
+        /*    content: '>';*/
+        /*    font-size: 100px;*/
+        /*    color: black;*/
+        /*}*/
+
+        /*.carousel-control-prev-icon:after {*/
+        /*    content: '<';*/
+        /*    font-size: 100px;*/
+        /*    color: black;*/
+        /*}*/
+    </style>
     <title>Cards</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -12,53 +125,104 @@
 </head>
 <body>
 
-<div id="carousel" class="carousel slide" style="align-content: center" data-ride="carousel">
+<div class="container">
+    <div class="row">
+        <div id="carousel" class="carousel slide" style="align-content: center" data-ride="carousel">
 
-{{/*     carousel indicators */}}
-        <ul class="carousel-indicators">
-            {{range $index, $card := .Cards}}
-                {{if (eq $index 0)}}
-                    <li data-target="#carousel" data-slide-to="0" class="active"></li>
-                {{else}}
-                    <li data-target="#carousel" data-slide-to="{{$index}}"></li>
-                {{end}}
-            {{end}}
-        </ul>
+                {{/*     carousel indicators */}}
+                <ul class="carousel-indicators">
+                    {{range $index, $na := .Pages }}
+                        {{if (eq $index 0)}}
+                            <li data-target="#carousel" data-slide-to="0" class="active"></li>
+                        {{else}}
+                            <li data-target="#carousel" data-slide-to="{{$index}}"></li>
+                        {{end}}
+                    {{end}}
+                </ul>
+                {{/*     carousel items */}}
+                <div class="carousel-inner" style="background-color:dodgerblue;">
+                    {{range $index, $page := .Pages}}
+                        {{if (eq $index 0)}}
+                            <div class="carousel-item active text-center">
+                                <div class="row">
+                                    {{range $card := $page.Cards}}
+                                        <div class="col-4 card">
+                                            <img src="{{ $card.ImageURLHiRes }}" alt="card" width=100% height=100%>
+                                        </div>
+                                    {{end}}
+                                </div>
+                            </div>
+                        {{else}}
+                            <div class="carousel-item text-center">
+                                <div class="row">
+                                    {{range $card := $page.Cards}}
+                                        <div class="col-4 card">
+                                            <img src="{{ $card.ImageURLHiRes }}" alt="card" width=100% height=100%>
+                                        </div>
+                                    {{end}}
+                                </div>
+                            </div>
+                        {{end}}
+                    {{end}}
+                </div>
 
-{{/*     carousel items */}}
-    <div class="carousel-inner">
-        {{range $index, $card := .Cards}}
-            {{if (eq $index 0)}}
-                <div class="carousel-item active text-center">
-                    <div class="jumbotron jumbotron-fluid text-center">
-                        <div class="container">
-                            <h1 class="display-4">{{ $card.Name }}</h1>
-                            <p class="lead">{{$card.Series}} / {{$card.Set}} / {{$card.SetCode}}</p>
-                        </div>
-                    </div>
-                    <img src="{{ $card.ImageURLHiRes }}" alt="card" width=75% height=75%>
-                </div>
-            {{else}}
-                <div class="carousel-item text-center">
-                    <div class="jumbotron jumbotron-fluid text-center">
-                        <div class="container">
-                            <h1 class="display-4">{{ $card.Name }}</h1>
-                            <p class="lead">{{$card.Series}} / {{$card.Set}} / {{$card.SetCode}}</p>
-                        </div>
-                    </div>
-                    <img src="{{ $card.ImageURLHiRes }}" alt="card" width=75% height=75%>
-                </div>
-            {{end}}
-        {{end}}
+            {{/*     next and previous buttons */}}
+            <a class="previous-button" data-slide="previous" href="#carousel">o</a>
+            <a class="next-button" data-slide="next" href="#carousel">o</a>
     </div>
 
-{{/*     next and previous buttons */}}
-    <a class="carousel-control-prev" href="#carousel" data-slide="prev">
-        <span class="carousel-control-prev-icon"></span>
-    </a>
-    <a class="carousel-control-next" href="#carousel" data-slide="next">
-        <span class="carousel-control-next-icon"></span>
-    </a>
 </div>
+
+<script>
+    //Make the DIV element draggagle:
+    dragElement(document.getElementById("myDiv"));
+
+    function dragElement(elmnt) {
+        var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+        if (document.getElementById(elmnt.id + "header")) {
+            /* if present, the header is where you move the DIV from:*/
+            document.getElementById(elmnt.id + "header").onmousedown = dragMouseDown;
+        } else {
+            /* otherwise, move the DIV from anywhere inside the DIV:*/
+            elmnt.onmousedown = dragMouseDown;
+        }
+
+        function dragMouseDown(e) {
+            e = e || window.event;
+            e.preventDefault();
+            // get the mouse cursor position at startup:
+            pos3 = e.clientX;
+            pos4 = e.clientY;
+            document.onmouseup = closeDragElement;
+            // call a function whenever the cursor moves:
+            document.onmousemove = elementDrag;
+        }
+
+        function elementDrag(e) {
+            e = e || window.event;
+            e.preventDefault();
+            // calculate the new cursor position:
+            pos1 = pos3 - e.clientX;
+            pos2 = pos4 - e.clientY;
+            pos3 = e.clientX;
+            pos4 = e.clientY;
+            // set the element's new position:
+            elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+            elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+        }
+
+        function closeDragElement() {
+            /* stop moving when mouse button is released:*/
+            document.onmouseup = null;
+            document.onmousemove = null;
+        }
+    }
+</script>
+
 </body>
+{{define "footer"}}
+    <footer>
+        <p>Here is the footer</p>
+    </footer>
+{{end}}
 </html>

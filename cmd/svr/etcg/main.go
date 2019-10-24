@@ -41,7 +41,7 @@ func main() {
 	r.HandleFunc("/", Home)
 	r.HandleFunc("/receive", receiveAjax)
 	r.HandleFunc("/test-page", testPage)
-	r.HandleFunc("/view", con.ViewCard)
+	r.HandleFunc("/view", con.ViewPaginated)
 	r.HandleFunc("/test-load-health", testLoadHealth)
 	r.HandleFunc("/sayhelloname", sayhelloName)
 	r.Handle("/card/{cardId}", card.GetCards(con)).Methods(http.MethodGet)
@@ -51,7 +51,7 @@ func main() {
 
 }
 func testPage(w http.ResponseWriter, r *http.Request) {
-	p := client.Page{
+	p := client.UserFacingHTML{
 		Title: "test-page",
 		Body:  []byte("This is a test of Pages"),
 	}

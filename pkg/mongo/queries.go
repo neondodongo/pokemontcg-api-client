@@ -25,6 +25,7 @@ type MongoBongo struct {
 	CardsCollection string
 	SetsCollection  string
 	UsersCollection string
+	SetLimit		int64
 }
 
 func (db *MongoBongo) Upsert(t interface{}, c string) error {
@@ -88,6 +89,7 @@ func InitDatabase(c config.Config) MongoBongo {
 
 	db := &MongoBongo{
 		Client:          client,
+		SetLimit:		 c.Mongo.SetLimit,
 		Database:        c.Mongo.Database,
 		CardsCollection: c.Mongo.CardsCollection,
 		SetsCollection:  c.Mongo.SetsCollection,
@@ -121,7 +123,7 @@ func (db *MongoBongo) GetFilterCards(params url.Values) []dto.Card {
 	fmt.Println("filters: ", filters)
 
 	filter = bson.M{"$and": filters}
-	options := options.Find().SetLimit(100)
+	options := options.Find().SetLimit(db.SetLimit)
 	c := db.Client.Database(db.Database).Collection(db.CardsCollection)
 
 	cursor, err := c.Find(context.Background(), filter, options)

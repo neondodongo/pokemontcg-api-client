@@ -14,6 +14,7 @@ type Config struct {
 		CardsCollection string `json:"cardsCollection"`
 		SetsCollection  string `json:"setsCollection"`
 		UsersCollection string `json:"usersCollection"`
+		SetLimit		int64	   `json:"setLimit"`
 	}
 	PokemonAPI string `json:"pokemonAPI"`
 }

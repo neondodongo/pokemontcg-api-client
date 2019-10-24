@@ -52,3 +52,68 @@ func (c *Controller)ViewCard(w http.ResponseWriter, r *http.Request){
 		log.Println("error executing template: ", e)
 	}
 }
+
+func (c *Controller)ViewPaginated(w http.ResponseWriter, r *http.Request){
+
+	parms := r.URL.Query()
+	log.Println("parameters: ", parms)
+
+	var cards dto.Cards
+	var pagi dto.PaginatedCards
+
+	cards.Cards = c.Mongo.GetFilterCards(parms)
+	log.Println("cards: ", cards)
+
+	pagi = paginate(cards.Cards)
+
+	log.Printf("Paginated cards: %v", len(pagi.Pages))
+
+	p, e := client.LoadPage("view")
+	if e != nil{
+		_, e:= fmt.Fprintf(w, fmt.Sprintf("error loading page: %v", e))
+		if e != nil{
+			fmt.Println("error serving: ", e)
+		}
+	}
+
+	temp, e := template.ParseFiles("templates/" + p.Title + ".html")
+	if e != nil{
+		log.Println("error parsing template: ", e)
+	}
+
+	e = temp.Execute(w, pagi)
+	if e != nil{
+		log.Println("error executing template: ", e)
+	}
+}
+
+func paginate(a []dto.Card) (p dto.PaginatedCards){
+
+	var i int
+	var pg dto.Page
+
+	if a != nil{
+		numPgs := (len(a) / 6) + 1
+
+		if numPgs == 0{
+			numPgs++
+		}
+
+		for numPgs != 0{
+			for len(pg.Cards) <= 5{
+				if i > len(a) - 1 {
+					break
+				}
+				pg.Cards = append(pg.Cards, a[i])
+				i++
+			}
+			p.Pages = append(p.Pages, pg)
+			for c := range pg.Cards{
+				log.Printf("card: %v", c)
+			}
+			pg.Cards = nil
+			numPgs--
+		}
+	}
+	return
+}

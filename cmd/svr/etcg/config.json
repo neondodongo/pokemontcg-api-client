@@ -6,6 +6,7 @@
     "database": "Pokemon-Elite-TCG",
     "cardsCollection": "cards",
     "setsCollection": "sets",
-    "usersCollection": "users"
+    "usersCollection": "users",
+    "setLimit": 300
   }
 }
