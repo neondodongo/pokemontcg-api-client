@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"pokemontcg-api-client/internal/etcg"
@@ -11,7 +12,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-var con *etcg.PokemonTCGController
+var con etcg.Controller
 
 func main() {
 
@@ -25,21 +26,45 @@ func main() {
 	cli := client.InitializeClient(cfg)
 
 	//InitiateControllers
-	con = &etcg.PokemonTCGController{
-		Client: cli.Client,
-		Mongo:  &db,
+	con := etcg.Controller{
+		Client: cli,
+		Mongo:  db,
 		Config: cfg,
 	}
 	log.Println("log: Etcg-admin [ running ]")
 
 	////Mux Router handling
 	r := mux.NewRouter().StrictSlash(true)
-	//
-	////Handler functions for endpoints
-	//r.Handle("/health", client.Health()).Methods(http.MethodGet)
-	r.HandleFunc("/dashboard", con.GetDashboard).Methods(http.MethodGet)
-	r.HandleFunc("/dashboard/db/build", con.BuildDatabase).Methods(http.MethodGet)
+	r.Handle("/cards/get", con.GetCards()).Methods(http.MethodGet)
+	r.Handle("/sets/get", con.GetSets()).Methods(http.MethodGet)
 
 	log.Println("Server is running on port: ", cfg.Port)
 	log.Fatal(http.ListenAndServe(":"+cfg.Port, http.Handler(r)))
+}
+
+func PopulateDatabase() {
+
+	fmt.Println("Getting sets")
+	sets, err := con.GetAllSets()
+	if err != nil {
+		log.Printf("unable to get sets [%v]", err)
+	}
+
+	for _, set := range sets.Sets {
+		err := con.Mongo.Upsert(set)
+		if err != nil {
+			log.Printf("failed to insert set %v [%v]", set.Code, err)
+		}
+		cards := con.GetCardsBySetCode(set.Code)
+		if len(cards.Cards) != set.TotalCards {
+			log.Printf("[WARNING] did not receive all card in set [ %s ] - actual [ %d ] / expected: [ %d ]", set.Name, len(cards.Cards), set.TotalCards)
+		}
+
+		for _, card := range cards.Cards {
+			err := con.Mongo.Upsert(card)
+			if err != nil {
+				log.Printf("failed to insert card %v [%v]", card.ID, err)
+			}
+		}
+	}
 }

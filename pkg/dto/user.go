@@ -12,7 +12,7 @@ type User struct {
 	Email    string `json:"email" bson:"email"`
 	Title    string `json:"title" bson:"title"`
 	// Rank       string    `json:"rank" bson:"rank"`
-	Decks      []Deck    `json:"decks bson:"decks"`
+	Decks      []Deck    `json:"decks" bson:"decks"`
 	Verified   bool      `json:"verified" bson:"verified"`
 	CreationDt time.Time `json:"creationdt" bson:"creationdt"`
 	LastActive time.Time `json:"lastactive" bson:"lastactive"`

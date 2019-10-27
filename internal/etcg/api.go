@@ -3,26 +3,67 @@ package etcg
 import (
 	"encoding/json"
 	"fmt"
+	"golang.org/x/crypto/bcrypt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"pokemontcg-api-client/pkg/client"
 	"pokemontcg-api-client/pkg/config"
 	"pokemontcg-api-client/pkg/dto"
 	"pokemontcg-api-client/pkg/mongo"
 	"strconv"
 	"strings"
-
-	"golang.org/x/crypto/bcrypt"
 )
 
-type PokemonTCGController struct {
-	Client *http.Client
+type Controller struct {
 	Config config.Config
-	Mongo  *mongo.MongoBongo
+	Mongo  mongo.MongoBongo
+	Client http.Client
 }
 
-func (c *PokemonTCGController) GetAllSets() (*dto.Sets, error) {
+func (c Controller)GetCards() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer r.Body.Close()
+
+		params, err := url.ParseQuery(r.URL.RawQuery)
+		if err != nil {
+			log.Println("Unable to read query")
+		}
+		fmt.Printf("Parameters: %s\n", params)
+
+		var cards []dto.Card
+		cards = c.Mongo.GetFilterCards(params)
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+
+		client.RespondWithPrettyJSON(w, 200, cards)
+	})
+}
+
+func (c Controller)GetSets() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer r.Body.Close()
+
+		params, err := url.ParseQuery(r.URL.RawQuery)
+		if err != nil {
+			log.Println("Unable to read query")
+		}
+		fmt.Printf("Parameters: %s\n", params)
+
+		var sets []dto.Set
+		sets = c.Mongo.GetFilterSets(params)
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+
+		client.RespondWithPrettyJSON(w, 200, sets)
+	})
+}
+
+//GetAllSets pulls all sets from pokemon tcg api
+func (c Controller) GetAllSets() (*dto.Sets, error) {
 
 	var sets dto.Sets
 
@@ -51,7 +92,7 @@ func (c *PokemonTCGController) GetAllSets() (*dto.Sets, error) {
 }
 
 // GetCardsBySetCode will fetch a list of card by their setCode and return it
-func (c *PokemonTCGController) GetCardsBySetCode(setCode string) *dto.Cards {
+func (c Controller) GetCardsBySetCode(setCode string) *dto.Cards {
 	setCode = strings.TrimSpace(setCode)
 	if setCode != "" {
 		var err error
@@ -66,7 +107,7 @@ func (c *PokemonTCGController) GetCardsBySetCode(setCode string) *dto.Cards {
 	return &dto.Cards{}
 }
 
-func (c *PokemonTCGController) GetPaginatedCards(setCode string) (error, *dto.Cards) {
+func (c Controller) GetPaginatedCards(setCode string) (error, *dto.Cards) {
 	count := 1
 	actualCards := make([]dto.Card, 0)
 
@@ -118,34 +159,9 @@ func (c *PokemonTCGController) GetPaginatedCards(setCode string) (error, *dto.Ca
 	return nil, cds
 }
 
-func PopulateDatabase(c *PokemonTCGController) {
 
-	fmt.Println("Getting sets")
-	sets, err := c.GetAllSets()
-	if err != nil {
-		log.Printf("unable to get sets [%v]", err)
-	}
 
-	for _, set := range sets.Sets {
-		err := c.Mongo.Upsert(set)
-		if err != nil {
-			log.Printf("failed to insert set %v [%v]", set.Code, err)
-		}
-		cards := c.GetCardsBySetCode(set.Code)
-		if len(cards.Cards) != set.TotalCards {
-			log.Printf("[WARNING] did not receive all card in set [ %s ] - actual [ %d ] / expected: [ %d ]", set.Name, len(cards.Cards), set.TotalCards)
-		}
-
-		for _, card := range cards.Cards {
-			err := c.Mongo.Upsert(card)
-			if err != nil {
-				log.Printf("failed to insert card %v [%v]", card.ID, err)
-			}
-		}
-	}
-}
-
-func (c *PokemonTCGController) CreateUser(un, em, pw, pwv string) error {
+func (c Controller) CreateUser(un, em, pw, pwv string) error {
 
 	if pw != pwv {
 		fmt.Println("Password and Password Verify do not match")

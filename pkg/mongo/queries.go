@@ -154,6 +154,47 @@ func (db *MongoBongo) GetFilterCards(params url.Values) []dto.Card {
 
 }
 
+func (db *MongoBongo) GetFilterSets(params url.Values) []dto.Set {
+
+	var filters []bson.M
+	var filter bson.M
+	for k, v := range params {
+		filters = append(filters, bson.M{k: v[0]})
+
+	}
+	fmt.Println("filters: ", filters)
+
+	filter = bson.M{"$and": filters}
+	options := options.Find().SetLimit(100)
+	c := db.Client.Database(db.Database).Collection(db.SetsCollection)
+
+	cursor, err := c.Find(context.Background(), filter, options)
+	if err != nil {
+		filter = bson.M{}
+		log.Printf("error finding documents: %v... attempt All Sets", err)
+		c, e := c.Find(context.Background(), filter, options)
+		if e != nil {
+			log.Printf("error finding All Sets: %v", e)
+		}
+		cursor = c
+	}
+
+	sets := []dto.Set{}
+
+	for cursor.Next(context.Background()) {
+		set := dto.Set{}
+		if err := cursor.Decode(&set); err != nil {
+			log.Printf("Unable to decode set [%v]", err)
+		}
+		sets = append(sets, set)
+	}
+
+	log.Printf("Total sets from Filtered Search: %d", len(sets))
+
+	return sets
+
+}
+
 func (db *MongoBongo) FindUserByUsername(un string) (u dto.User, err error) {
 	filter := bson.M{"username": un}
 	col := db.GetCollection(db.UsersCollection)

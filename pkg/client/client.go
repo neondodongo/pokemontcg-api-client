@@ -10,20 +10,16 @@ import (
 	"time"
 )
 
-type WebClient struct {
-	Client *http.Client
-}
 
-func InitializeClient(c config.Config) (w WebClient) {
+func InitializeClient(c config.Config) (client http.Client) {
 
-	client := http.Client{
+	client = http.Client{
 		Transport:     nil,
 		CheckRedirect: nil,
 		Jar:           nil,
 		Timeout:       60 * time.Second,
 	}
 
-	w.Client = &client
 	return
 }
 
@@ -36,10 +32,6 @@ func RespondWithPrettyJSON(w http.ResponseWriter, statusCode int, payload interf
 	if e != nil {
 		log.Println("error writing byte slice: ", e)
 	}
-}
-
-func (c *WebClient) Get(uri string) {
-
 }
 
 func DecodeInterface(io io.Reader, t interface{}) error {
