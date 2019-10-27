@@ -124,7 +124,7 @@ func (c Controller) GetPaginatedCards(setCode string) (error, *dto.Cards) {
 		var cards dto.Cards
 
 		//decode response from call to dynamic tcg uri
-		err = client.DecodeInterface(resp.Body, &cards)
+		err = client.DecodeBodyToInterface(resp.Body, &cards)
 		if err != nil {
 			log.Fatalf("error decoding interface [%v]", err)
 			return err, nil

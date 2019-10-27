@@ -31,7 +31,7 @@ func RespondWithPrettyJSON(w http.ResponseWriter, statusCode int, payload interf
 	}
 }
 
-func DecodeInterface(io io.Reader, t interface{}) error {
+func DecodeBodyToInterface(io io.Reader, t interface{}) error {
 	content, err := ioutil.ReadAll(io)
 	if err != nil {
 		return err
