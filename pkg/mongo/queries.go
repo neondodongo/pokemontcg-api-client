@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"pokemontcg-api-client/pkg/config"
 	"pokemontcg-api-client/pkg/dto"
+	"strconv"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -117,25 +118,24 @@ func (db *MongoBongo) GetFilterCards(params url.Values) []dto.Card {
 
 	var filters []bson.M
 	var filter bson.M
-	for k, v := range params {
-		filters = append(filters, bson.M{k: v[0]})
 
+	if len(params) > 0 {
+		for k, v := range params {
+			filters = append(filters, bson.M{k: v[0]})
+
+		}
+		fmt.Println("filters: ", filters)
+		filter = bson.M{"$and": filters}
+	} else {
+		filter = bson.M{}
 	}
-	fmt.Println("filters: ", filters)
 
-	filter = bson.M{"$and": filters}
-	options := options.Find().SetLimit(100)
+	// options := options.Find().SetLimit(100)
 	c := db.Client.Database(db.Database).Collection(db.CardsCollection)
 
-	cursor, err := c.Find(context.Background(), filter, options)
+	cursor, err := c.Find(context.Background(), filter)
 	if err != nil {
-		filter = bson.M{"set": "Shiny Vault"}
-		log.Printf("error finding documents: %v... attempt Shiny Vault", err)
-		c, e := c.Find(context.Background(), filter, options)
-		if e != nil {
-			log.Printf("error finding Shiny Vault: %v", e)
-		}
-		cursor = c
+		log.Printf("error finding documents: %v", err)
 	}
 
 	cards := []dto.Card{}
@@ -158,25 +158,31 @@ func (db *MongoBongo) GetFilterSets(params url.Values) []dto.Set {
 
 	var filters []bson.M
 	var filter bson.M
-	for k, v := range params {
-		filters = append(filters, bson.M{k: v[0]})
-
-	}
-	fmt.Println("filters: ", filters)
-
-	filter = bson.M{"$and": filters}
-	options := options.Find().SetLimit(100)
-	c := db.Client.Database(db.Database).Collection(db.SetsCollection)
-
-	cursor, err := c.Find(context.Background(), filter, options)
-	if err != nil {
-		filter = bson.M{}
-		log.Printf("error finding documents: %v... attempt All Sets", err)
-		c, e := c.Find(context.Background(), filter, options)
-		if e != nil {
-			log.Printf("error finding All Sets: %v", e)
+	if len(params) > 0 {
+		for k, v := range params {
+			b, e := strconv.ParseBool(v[0])
+			if e == nil {
+				filters = append(filters, bson.M{k: b})
+				continue
+			}
+			i, e := strconv.Atoi(v[0])
+			if e == nil {
+				filters = append(filters, bson.M{k: i})
+				continue
+			}
+			filters = append(filters, bson.M{k: v[0]})
 		}
-		cursor = c
+		fmt.Println("filters: ", filters)
+		filter = bson.M{"$and": filters}
+	} else {
+		filter = bson.M{}
+	}
+
+	// options := options.Find().SetLimit(100)
+	c := db.Client.Database(db.Database).Collection(db.SetsCollection)
+	cursor, err := c.Find(context.Background(), filter)
+	if err != nil {
+		log.Printf("error finding documents: %v", err)
 	}
 
 	sets := []dto.Set{}

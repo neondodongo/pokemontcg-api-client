@@ -3,7 +3,6 @@ package etcg
 import (
 	"encoding/json"
 	"fmt"
-	"golang.org/x/crypto/bcrypt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -14,6 +13,8 @@ import (
 	"pokemontcg-api-client/pkg/mongo"
 	"strconv"
 	"strings"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type Controller struct {
@@ -22,7 +23,7 @@ type Controller struct {
 	Client http.Client
 }
 
-func (c Controller)GetCards() http.Handler {
+func (c Controller) GetCards() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
 
@@ -42,7 +43,7 @@ func (c Controller)GetCards() http.Handler {
 	})
 }
 
-func (c Controller)GetSets() http.Handler {
+func (c Controller) GetSets() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
 
@@ -158,8 +159,6 @@ func (c Controller) GetPaginatedCards(setCode string) (error, *dto.Cards) {
 
 	return nil, cds
 }
-
-
 
 func (c Controller) CreateUser(un, em, pw, pwv string) error {
 
