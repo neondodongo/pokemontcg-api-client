@@ -10,16 +10,13 @@ import (
 	"time"
 )
 
-
 func InitializeClient(c config.Config) (client http.Client) {
-
 	client = http.Client{
 		Transport:     nil,
 		CheckRedirect: nil,
 		Jar:           nil,
 		Timeout:       60 * time.Second,
 	}
-
 	return
 }
 
@@ -39,7 +36,6 @@ func DecodeInterface(io io.Reader, t interface{}) error {
 	if err != nil {
 		return err
 	}
-
 	err = json.Unmarshal(content, &t)
 	if err != nil {
 		return err

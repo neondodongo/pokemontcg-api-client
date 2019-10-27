@@ -31,7 +31,6 @@ func (c Controller) GetCards() http.Handler {
 		if err != nil {
 			log.Println("Unable to read query")
 		}
-		fmt.Printf("Parameters: %s\n", params)
 
 		var cards []dto.Card
 		cards = c.Mongo.GetFilterCards(params)
@@ -51,7 +50,6 @@ func (c Controller) GetSets() http.Handler {
 		if err != nil {
 			log.Println("Unable to read query")
 		}
-		fmt.Printf("Parameters: %s\n", params)
 
 		var sets []dto.Set
 		sets = c.Mongo.GetFilterSets(params)
