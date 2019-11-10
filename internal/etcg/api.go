@@ -11,6 +11,7 @@ import (
 	"pokemontcg-api-client/pkg/config"
 	"pokemontcg-api-client/pkg/dto"
 	"pokemontcg-api-client/pkg/mongo"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -34,11 +35,27 @@ func (c Controller) GetCards() http.Handler {
 
 		var cards []dto.Card
 		cards = c.Mongo.GetFilterCards(params)
-
+		sortCardsByCardNum(cards)
+		w.Header().Set("Access-Control-Allow-Origin", "*") // for local Development only!
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 
 		client.RespondWithPrettyJSON(w, 200, cards)
+	})
+}
+
+func sortCardsByCardNum(cards []dto.Card) {
+	sort.Slice(cards, func(i, j int) bool {
+
+		c1, err := strconv.Atoi(cards[i].Number)
+		if err != nil {
+			log.Println(err)
+		}
+		c2, err := strconv.Atoi(cards[j].Number)
+		if err != nil {
+			log.Println(err)
+		}
+		return c1 < c2
 	})
 }
 

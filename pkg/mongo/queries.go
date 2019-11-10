@@ -28,6 +28,7 @@ type MongoBongo struct {
 	UsersCollection string
 }
 
+// Upsert filters by interface type and attempts to upsert a corresponding document to MongoDB
 func (db *MongoBongo) Upsert(t interface{}) error {
 	var filter bson.M
 	var c string
@@ -45,7 +46,7 @@ func (db *MongoBongo) Upsert(t interface{}) error {
 	}
 
 	update := bson.M{"$set": t}
-	collection := db.GetCollection(c)
+	collection := db.SetCollection(c)
 	r, err := collection.UpdateOne(context.Background(), filter, update, options.Update().SetUpsert(true))
 	if err != nil {
 		return fmt.Errorf("Failed to insert one to %s collection [ %v ]", collection.Name(), err)
@@ -54,13 +55,14 @@ func (db *MongoBongo) Upsert(t interface{}) error {
 		log.Printf("inserted one [ %v ] to collection [ %v ]", t, collection.Name())
 	} else if r.ModifiedCount == 1 {
 		log.Printf("updated one [ %v ] to collection [ %v ]", t, collection.Name())
-	}
+	} // TODO: if modified count > 1, attempt delete duplicate records
 
 	return nil
 
 }
 
-func (db *MongoBongo) GetCollection(c string) *mongo.Collection {
+// SetCollection sets an active collection to a MongoBongo
+func (db *MongoBongo) SetCollection(c string) *mongo.Collection {
 	switch c {
 	case db.CardsCollection:
 		log.Printf("cards collection name is being set [ %v ]", c)
@@ -77,6 +79,7 @@ func (db *MongoBongo) GetCollection(c string) *mongo.Collection {
 	}
 }
 
+// InitDatabase creates an instance of a MongoBongo
 func InitDatabase(c config.Config) MongoBongo {
 
 	client, err := mongo.NewClient(options.Client().ApplyURI(c.Mongo.Url))
@@ -100,6 +103,8 @@ func InitDatabase(c config.Config) MongoBongo {
 
 	return *db
 }
+
+// GetCardById executes a query to retrieve a Card filtered by ID
 func (db *MongoBongo) GetCardById(id string) (card *dto.Card) {
 
 	c := db.Client.Database(db.Database).Collection(db.CardsCollection)
@@ -114,6 +119,7 @@ func (db *MongoBongo) GetCardById(id string) (card *dto.Card) {
 	return
 }
 
+// GetFilterCards creates a filter on Card attribues returning a slice of Card
 func (db *MongoBongo) GetFilterCards(params url.Values) []dto.Card {
 
 	var filters []bson.M
@@ -154,6 +160,7 @@ func (db *MongoBongo) GetFilterCards(params url.Values) []dto.Card {
 
 }
 
+//GetFilterSets creates a filter on Set attributes returning a slice of Set
 func (db *MongoBongo) GetFilterSets(params url.Values) []dto.Set {
 
 	var filters []bson.M
@@ -201,9 +208,10 @@ func (db *MongoBongo) GetFilterSets(params url.Values) []dto.Set {
 
 }
 
+// FindUserByUsername find one User by their username
 func (db *MongoBongo) FindUserByUsername(un string) (u dto.User, err error) {
 	filter := bson.M{"username": un}
-	col := db.GetCollection(db.UsersCollection)
+	col := db.SetCollection(db.UsersCollection)
 	r := col.FindOne(context.Background(), filter)
 	if err = r.Decode(&u); err != nil {
 		return
@@ -211,9 +219,10 @@ func (db *MongoBongo) FindUserByUsername(un string) (u dto.User, err error) {
 	return
 }
 
+// FindUserByEmail find one User by their email address
 func (db *MongoBongo) FindUserByEmail(em string) (u dto.User, err error) {
 	filter := bson.M{"email": em}
-	col := db.GetCollection(db.UsersCollection)
+	col := db.SetCollection(db.UsersCollection)
 	r := col.FindOne(context.Background(), filter)
 	if err = r.Decode(&u); err != nil {
 		return
