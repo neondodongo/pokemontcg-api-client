@@ -1,6 +1,7 @@
 package etcg
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -27,20 +28,46 @@ type Controller struct {
 func (c Controller) GetCards() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
+		w.Header().Set("Access-Control-Allow-Origin", "*") // for local Development only!
+		w.Header().Set("Content-Type", "application/json")
 
 		params, err := url.ParseQuery(r.URL.RawQuery)
 		if err != nil {
 			log.Println("Unable to read query")
 		}
 
-		var cards []dto.Card
-		cards = c.Mongo.GetFilterCards(params)
-		sortCardsByCardNum(cards)
-		w.Header().Set("Access-Control-Allow-Origin", "*") // for local Development only!
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
+		filter := mongo.Filter(params)
 
-		client.RespondWithPrettyJSON(w, 200, cards)
+		var card dto.Cards
+		results, err := c.Mongo.Find(filter, "cards")
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			client.RespondWithPrettyJSON(w, 503, fmt.Sprintf("Error finding documents: %v", err))
+			return
+		}
+
+		b, err := json.Marshal(results)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			client.RespondWithPrettyJSON(w, 503, fmt.Sprintf("Error finding documents: %v", err))
+			return
+		}
+
+		// fmt.Println(string(b))
+		br := bytes.NewReader(b)
+
+		decoder := json.NewDecoder(br)
+		fmt.Println(results)
+
+		if err = decoder.Decode(&card); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			client.RespondWithPrettyJSON(w, 503, fmt.Sprintf("Error finding documents: %v", err))
+			return
+		}
+
+		// sortCardsByCardNum(cards)
+		w.WriteHeader(http.StatusOK)
+		client.RespondWithPrettyJSON(w, 200, card)
 	})
 }
 
@@ -63,13 +90,13 @@ func (c Controller) GetSets() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
 
-		params, err := url.ParseQuery(r.URL.RawQuery)
+		_, err := url.ParseQuery(r.URL.RawQuery)
 		if err != nil {
 			log.Println("Unable to read query")
 		}
 
 		var sets []dto.Set
-		sets = c.Mongo.GetFilterSets(params)
+		// sets = c.Mongo.GetFilterSets(params)
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
@@ -183,22 +210,22 @@ func (c Controller) CreateUser(un, em, pw, pwv string) error {
 	}
 
 	// Check if user exists
-	_, err := c.Mongo.FindUserByEmail(em)
-	if err != nil {
-		fmt.Printf("Did not find User data [%v]\n", err)
-	} else {
-		log.Printf("User already registered with email %s", em)
-		return nil
-	}
+	// _, err := c.Mongo.FindUserByEmail(em)
+	// if err != nil {
+	// 	fmt.Printf("Did not find User data [%v]\n", err)
+	// } else {
+	// 	log.Printf("User already registered with email %s", em)
+	// 	return nil
+	// }
 
 	// Check if username has been taken
-	_, err = c.Mongo.FindUserByUsername(un)
-	if err != nil {
-		fmt.Printf("Failed to find User data [%v]\n", err)
-	} else {
-		log.Printf("Username already taken: %s", un)
-		return nil
-	}
+	// _, err = c.Mongo.FindUserByUsername(un)
+	// if err != nil {
+	// 	fmt.Printf("Failed to find User data [%v]\n", err)
+	// } else {
+	// 	log.Printf("Username already taken: %s", un)
+	// 	return nil
+	// }
 
 	// Hash user's password and save to DB
 	hash, err := HashPassword(pw)
@@ -217,10 +244,10 @@ func (c Controller) CreateUser(un, em, pw, pwv string) error {
 	u.Roles = u.AddRole(r)
 
 	// Save user
-	err = c.Mongo.Upsert(u)
-	if err != nil {
-		return err
-	}
+	// err = c.Mongo.Upsert(u, bson.M{"id", id}, "user")
+	// if err != nil {
+	// 	return err
+	// }
 	return nil
 }
 

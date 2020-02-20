@@ -3,12 +3,11 @@ package mongo
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/url"
 	"pokemontcg-api-client/pkg/config"
 	"pokemontcg-api-client/pkg/dto"
-	"strconv"
 
+	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -21,62 +20,33 @@ type DataAccess interface {
 }
 
 type MongoBongo struct {
-	Client          *mongo.Client
-	Database        string
-	CardsCollection string
-	SetsCollection  string
-	UsersCollection string
+	Client   *mongo.Client
+	Database string
 }
 
 // Upsert filters by interface type and attempts to upsert a corresponding document to MongoDB
-func (db *MongoBongo) Upsert(t interface{}) error {
-	var filter bson.M
-	var c string
-	//determine interface type
-	switch t.(type) {
-	case dto.Card:
-		filter = bson.M{"id": t.(dto.Card).ID}
-		c = db.CardsCollection
-	case dto.Set:
-		filter = bson.M{"code": t.(dto.Set).Code}
-		c = db.SetsCollection
-	case dto.User:
-		filter = bson.M{"username": t.(dto.User).Username}
-		c = db.UsersCollection
+func (db *MongoBongo) Upsert(t interface{}, filter bson.M, col string) error {
+	update := bson.M{"$set": t}
+
+	log.Printf("cards collection name is being set [ %v ]", col)
+
+	c := db.Client.Database(db.Database).Collection(col)
+
+	res, err := c.UpdateOne(context.Background(), filter, update, options.Update().SetUpsert(true))
+	if err != nil {
+		return fmt.Errorf("Failed to insert one to %s collection [ %v ]", c.Name(), err)
 	}
 
-	update := bson.M{"$set": t}
-	collection := db.SetCollection(c)
-	r, err := collection.UpdateOne(context.Background(), filter, update, options.Update().SetUpsert(true))
-	if err != nil {
-		return fmt.Errorf("Failed to insert one to %s collection [ %v ]", collection.Name(), err)
+	if res.MatchedCount == 0 {
+		log.Info().Msgf("inserted one [ %v ] to collection [ %v ]", t, c.Name())
+	} else if res.ModifiedCount == 1 {
+		log.Info().Msgf("updated one [ %v ] to collection [ %v ]", t, c.Name())
+	} else if res.ModifiedCount > 1 {
+		log.Warn().Msgf("unexpected update [ %v ] to collection [ %v ]", t, c.Name())
 	}
-	if r.MatchedCount == 0 {
-		log.Printf("inserted one [ %v ] to collection [ %v ]", t, collection.Name())
-	} else if r.ModifiedCount == 1 {
-		log.Printf("updated one [ %v ] to collection [ %v ]", t, collection.Name())
-	} // TODO: if modified count > 1, attempt delete duplicate records
 
 	return nil
 
-}
-
-// SetCollection sets an active collection to a MongoBongo
-func (db *MongoBongo) SetCollection(c string) *mongo.Collection {
-	switch c {
-	case db.CardsCollection:
-		log.Printf("cards collection name is being set [ %v ]", c)
-		return db.Client.Database(db.Database).Collection(db.CardsCollection)
-	case db.SetsCollection:
-		log.Printf("sets collection name is being set [ %v ]", c)
-		return db.Client.Database(db.Database).Collection(db.SetsCollection)
-	case db.UsersCollection:
-		log.Printf("users collection name is being set [ %v ]", c)
-		return db.Client.Database(db.Database).Collection(db.UsersCollection)
-	default:
-		log.Printf("default collection name is being set [ %v ]", c)
-		return db.Client.Database(db.Database).Collection(db.CardsCollection)
-	}
 }
 
 // InitDatabase creates an instance of a MongoBongo
@@ -84,148 +54,145 @@ func InitDatabase(c config.Config) MongoBongo {
 
 	client, err := mongo.NewClient(options.Client().ApplyURI(c.Mongo.Url))
 	if err != nil {
-		log.Fatalf("error init mongo client [%v]", err)
+		log.Fatal().Err(err).Msg("failed to create MongoDB client")
 	}
 
 	ctx := context.Background()
 	err = client.Connect(ctx)
 	if err != nil {
-		log.Fatalf("My name is carol, bith [%v]", err)
+		log.Fatal().Err(err).Msg("failed to initialize MongoDB client")
 	}
 
 	db := &MongoBongo{
-		Client:          client,
-		Database:        c.Mongo.Database,
-		CardsCollection: c.Mongo.CardsCollection,
-		SetsCollection:  c.Mongo.SetsCollection,
-		UsersCollection: c.Mongo.UsersCollection,
+		Client:   client,
+		Database: c.Mongo.Database,
 	}
 
 	return *db
 }
 
 // GetCardById executes a query to retrieve a Card filtered by ID
-func (db *MongoBongo) GetCardById(id string) (card *dto.Card) {
+func (db *MongoBongo) GetCardById(id string, col string) (card *dto.Card) {
 
-	c := db.Client.Database(db.Database).Collection(db.CardsCollection)
+	c := db.Client.Database(db.Database).Collection(col)
 
-	log.Println("database  : ", db.Database)
-	log.Println("collection: ", db.CardsCollection)
-	log.Println("id        : ", id)
+	log.Debug().Msg("querying with...")
+	log.Debug().Msgf("database  : ", db.Database)
+	log.Debug().Msgf("collection: ", col)
+	log.Debug().Msgf("id        : ", id)
 
 	resp := c.FindOne(context.Background(), bson.M{"id": id}).Decode(&card)
 
-	log.Printf("response from mongo [ %v ]", resp)
+	log.Debug().Msgf("response from mongo [ %v ]", resp)
+
 	return
 }
 
-// GetFilterCards creates a filter on Card attribues returning a slice of Card
-func (db *MongoBongo) GetFilterCards(params url.Values) []dto.Card {
-
-	var filters []bson.M
-	var filter bson.M
+func Filter(params url.Values) bson.M {
+	var filter []bson.M
 
 	if len(params) > 0 {
 		for k, v := range params {
-			filters = append(filters, bson.M{k: v[0]})
-
+			filter = append(filter, bson.M{k: v[0]})
 		}
-		fmt.Println("filters: ", filters)
-		filter = bson.M{"$and": filters}
-	} else {
-		filter = bson.M{}
+
+		log.Debug().Msgf("Filter By: %v", filter)
+
+		return bson.M{"$and": filter}
 	}
 
-	// options := options.Find().SetLimit(100)
-	c := db.Client.Database(db.Database).Collection(db.CardsCollection)
+	return bson.M{}
+}
+
+func (db *MongoBongo) Find(filter bson.M, col string) (interface{}, error) {
+	// if reflect.TypeOf(&t).Kind() != reflect.Slice {
+	// 	return errors.New("illegal query result target: target interface must be of type slice")
+	// }
+
+	c := db.Client.Database(db.Database).Collection(col)
+	ctx := context.Background()
 
 	cursor, err := c.Find(context.Background(), filter)
 	if err != nil {
-		log.Printf("error finding documents: %v", err)
+		log.Error().Err(err).Msgf("error finding documents using filter: %q", filter)
+	}
+
+	results := make([]interface{}, 0)
+	if err = cursor.All(ctx, &results); err != nil {
+		log.Error().Err(err).Msg("error decoding results")
+	}
+
+	return results, nil
+}
+
+// GetFilterCards creates a filter on Card attribues returning a slice of Card
+func (db *MongoBongo) GetCards(filter bson.M, col string) []dto.Card {
+
+	// options := options.Find().SetLimit(100)
+	c := db.Client.Database(db.Database).Collection(col)
+
+	cursor, err := c.Find(context.Background(), filter)
+	if err != nil {
+		log.Error().Err(err).Msgf("error finding documents using filter: %q", filter)
 	}
 
 	cards := []dto.Card{}
 
 	for cursor.Next(context.Background()) {
 		card := dto.Card{}
+
 		if err := cursor.Decode(&card); err != nil {
-			log.Printf("Unable to decode card [%v]", err)
+			log.Error().Err(err).Msg("failed to decode Card")
 		}
+
 		cards = append(cards, card)
 	}
 
-	log.Printf("Total cards from Filtered Search: %d", len(cards))
+	log.Debug().Int("results", len(cards))
 
 	return cards
-
 }
 
 //GetFilterSets creates a filter on Set attributes returning a slice of Set
-func (db *MongoBongo) GetFilterSets(params url.Values) []dto.Set {
-
-	var filters []bson.M
-	var filter bson.M
-	if len(params) > 0 {
-		for k, v := range params {
-			b, e := strconv.ParseBool(v[0])
-			if e == nil {
-				filters = append(filters, bson.M{k: b})
-				continue
-			}
-			i, e := strconv.Atoi(v[0])
-			if e == nil {
-				filters = append(filters, bson.M{k: i})
-				continue
-			}
-			filters = append(filters, bson.M{k: v[0]})
-		}
-		fmt.Println("filters: ", filters)
-		filter = bson.M{"$and": filters}
-	} else {
-		filter = bson.M{}
-	}
-
+func (db *MongoBongo) GetFilterSets(filter bson.M, col string) []dto.Set {
 	// options := options.Find().SetLimit(100)
-	c := db.Client.Database(db.Database).Collection(db.SetsCollection)
+	c := db.Client.Database(db.Database).Collection(col)
+
 	cursor, err := c.Find(context.Background(), filter)
 	if err != nil {
-		log.Printf("error finding documents: %v", err)
+		log.Error().Err(err).Msgf("error finding documents using filter: %q", filter)
 	}
 
 	sets := []dto.Set{}
 
 	for cursor.Next(context.Background()) {
 		set := dto.Set{}
-		if err := cursor.Decode(&set); err != nil {
-			log.Printf("Unable to decode set [%v]", err)
+
+		if err := cursor.Decode(&sets); err != nil {
+			log.Error().Err(err).Msg("failed to decode to Set")
 		}
+
 		sets = append(sets, set)
 	}
 
-	log.Printf("Total sets from Filtered Search: %d", len(sets))
+	log.Debug().Int("results", len(sets))
 
 	return sets
-
 }
 
-// FindUserByUsername find one User by their username
-func (db *MongoBongo) FindUserByUsername(un string) (u dto.User, err error) {
-	filter := bson.M{"username": un}
-	col := db.SetCollection(db.UsersCollection)
-	r := col.FindOne(context.Background(), filter)
-	if err = r.Decode(&u); err != nil {
-		return
-	}
-	return
-}
+// FindUser find one User by a provided filter
+func (db *MongoBongo) FindUser(filter bson.M) (u dto.User, err error) {
+	col := "user"
+	c := db.Client.Database(db.Database).Collection(col)
 
-// FindUserByEmail find one User by their email address
-func (db *MongoBongo) FindUserByEmail(em string) (u dto.User, err error) {
-	filter := bson.M{"email": em}
-	col := db.SetCollection(db.UsersCollection)
-	r := col.FindOne(context.Background(), filter)
-	if err = r.Decode(&u); err != nil {
-		return
+	r, err := c.Find(context.Background(), filter)
+	if err != nil {
+		return dto.User{}, err
 	}
+
+	if err := r.Decode(&u); err != nil {
+		return dto.User{}, err
+	}
+
 	return
 }
